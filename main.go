@@ -5,9 +5,9 @@ import (
 	"fmt"
 	_ "github.com/codegangsta/cli"
 	"github.com/gin-gonic/gin"
+	"github.com/sanathp/StatusOk/database"
 	"github.com/sanathp/StatusOk/request"
 	"os"
-	"time"
 )
 
 func main() {
@@ -26,36 +26,9 @@ func main() {
 
 		fmt.Println("Error parsing config file", err.Error())
 	}
+	database.DatabaseInit()
 
-	for _, value := range jsonData.Requests {
-		fmt.Println("%v", value.Url)
-		go createTicker(value)
-	}
+	request.StartMonitoring(jsonData)
 
 	r.Run(":3143")
-}
-
-func createTicker(value request.RequestConfig) {
-	var ticker *time.Ticker = time.NewTicker(value.Time * time.Second)
-	quit := make(chan struct{})
-	for {
-		select {
-		case <-ticker.C:
-			go request.PerformRequest(value)
-		case <-quit:
-			ticker.Stop()
-			return
-		}
-	}
-}
-func getRequestConfig() request.RequestConfig {
-
-	return request.RequestConfig{
-		"http://google.com",
-		"GET",
-		nil,
-		nil,
-		200,
-		30,
-	}
 }

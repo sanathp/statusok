@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/sanathp/StatusOk/database"
 	"io"
 	"net/http"
 	"net/url"
@@ -32,21 +33,31 @@ type RequestConfig struct {
 }
 
 var (
-	//Define errors here
-	//ErrHeaderTooLong = &ProtocolError{"header too long"}
 	requests []RequestConfig
 )
 
-func createRequestsConfigArray(data []RequestConfig) {
-	requests = make([]RequestConfig, 0)
-	for _, value := range data {
-		requests = append(requests, value)
+func StartMonitoring(data RequestJson) {
+	for _, requestConfig := range data.Requests {
+		createTicker(requestConfig)
+	}
+}
+
+func createTicker(requestConfig RequestConfig) {
+	fmt.Println("createTicker")
+	var ticker *time.Ticker = time.NewTicker(requestConfig.Time * time.Second)
+	quit := make(chan struct{})
+	for {
+		select {
+		case <-ticker.C:
+			go PerformRequest(requestConfig)
+		case <-quit:
+			ticker.Stop()
+			return
+		}
 	}
 }
 
 func PerformRequest(requestConfig RequestConfig) {
-
-	client := &http.Client{}
 	var request *http.Request
 	var reqErr error
 	if len(requestConfig.FormParams) == 0 {
@@ -82,8 +93,14 @@ func PerformRequest(requestConfig RequestConfig) {
 
 	addHeaders(request, requestConfig.Headers)
 
+	fmt.Println("PerformRequest")
+	client := &http.Client{}
+
+	startTime := time.Now().Unix()
+
 	getResponse, respErr := client.Do(request)
 
+	endTime := time.Now().Unix()
 	if respErr != nil {
 		fmt.Println("Response Error :" + respErr.Error())
 	}
@@ -91,8 +108,9 @@ func PerformRequest(requestConfig RequestConfig) {
 	if getResponse.StatusCode != requestConfig.ResponseCode {
 		fmt.Println("Request Status Error : Expected - ", requestConfig.Url, requestConfig.ResponseCode, " Got %v", getResponse.Status)
 	}
-
+	database.WritePoints(requestConfig.Url, endTime-startTime, requestConfig.RequestType)
 	fmt.Println("Success")
+
 }
 
 func addHeaders(req *http.Request, headers map[string]string) {
@@ -108,7 +126,7 @@ func getUrlParams(params map[string]string) url.Values {
 		if i == 0 {
 			urlParams.Set(key, value)
 		} else {
-			urlParams.Add("url", "http://google.com")
+			urlParams.Add(key, value)
 		}
 	}
 
