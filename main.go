@@ -12,7 +12,15 @@ import (
 
 func main() {
 
-	r := gin.New()
+	// You library shoulbe be like this
+	//The only problem is influx db doesnot have alerts
+	//https://github.com/AcalephStorage/consul-alerts/blob/48c6d89c980f498117d394965af5cf9e7abecb7a/consul-alerts.go
+
+	//TODO:
+	//Write a timeChecker using this query SELECT mean(responseTime) FROM "https://facebook.com" WHERE time > now() - 5m GROUP BY time(5m);
+	//if response time greater than given config send notification
+
+	r := gin.Default()
 	configFile, err := os.Open("config.json")
 
 	if err != nil {

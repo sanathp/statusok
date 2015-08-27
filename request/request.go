@@ -37,12 +37,14 @@ var (
 )
 
 func StartMonitoring(data RequestJson) {
+	fmt.Println("lenght ", len(data.Requests))
 	for _, requestConfig := range data.Requests {
-		createTicker(requestConfig)
+		go createTicker(requestConfig)
 	}
 }
 
 func createTicker(requestConfig RequestConfig) {
+
 	fmt.Println("createTicker")
 	var ticker *time.Ticker = time.NewTicker(requestConfig.Time * time.Second)
 	quit := make(chan struct{})
@@ -58,6 +60,8 @@ func createTicker(requestConfig RequestConfig) {
 }
 
 func PerformRequest(requestConfig RequestConfig) {
+
+	fmt.Println("PerformRequest")
 	var request *http.Request
 	var reqErr error
 	if len(requestConfig.FormParams) == 0 {
@@ -94,22 +98,35 @@ func PerformRequest(requestConfig RequestConfig) {
 	addHeaders(request, requestConfig.Headers)
 
 	fmt.Println("PerformRequest")
-	client := &http.Client{}
+	timeout := time.Duration(10 * time.Second)
 
-	startTime := time.Now().Unix()
+	client := &http.Client{
+		Timeout: timeout,
+	}
+
+	start := time.Now()
 
 	getResponse, respErr := client.Do(request)
 
-	endTime := time.Now().Unix()
 	if respErr != nil {
 		fmt.Println("Response Error :" + respErr.Error())
+		return
 	}
+
+	elapsed := time.Since(start)
+
+	defer getResponse.Body.Close()
 
 	if getResponse.StatusCode != requestConfig.ResponseCode {
 		fmt.Println("Request Status Error : Expected - ", requestConfig.Url, requestConfig.ResponseCode, " Got %v", getResponse.Status)
 	}
-	database.WritePoints(requestConfig.Url, endTime-startTime, requestConfig.RequestType)
-	fmt.Println("Success")
+
+	database.WritePoints(requestConfig.Url, elapsed.Nanoseconds()/1000000, requestConfig.RequestType)
+
+	fmt.Println("Time Taken took %s", elapsed)
+	database.GetMeanResponseTime(requestConfig.Url, 5)
+
+	database.GetErrorsCount(requestConfig.Url, 5)
 
 }
 
