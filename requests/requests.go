@@ -1,4 +1,4 @@
-package request
+package requests
 
 import (
 	"bytes"
@@ -12,16 +12,16 @@ import (
 	"time"
 )
 
+var (
+	RequestsList []RequestConfig
+)
+
 const (
 	ContentType     = "Content-Type"
 	ContentLength   = "Content-Length"
 	FormContentType = "application/x-www-form-urlencoded"
 	JsonContentType = "application/json"
 )
-
-type RequestJson struct {
-	Requests []RequestConfig `json:"requests"`
-}
 
 type RequestConfig struct {
 	Url          string            `json:"url"`
@@ -32,13 +32,12 @@ type RequestConfig struct {
 	Time         time.Duration     `json:"time"`
 }
 
-var (
-	requests []RequestConfig
-)
+func RequestsInit(data []RequestConfig) {
+	RequestsList = data
+}
 
-func StartMonitoring(data RequestJson) {
-	fmt.Println("lenght ", len(data.Requests))
-	for _, requestConfig := range data.Requests {
+func StartMonitoring() {
+	for _, requestConfig := range RequestsList {
 		go createTicker(requestConfig)
 	}
 }
@@ -51,7 +50,7 @@ func createTicker(requestConfig RequestConfig) {
 	for {
 		select {
 		case <-ticker.C:
-			go PerformRequest(requestConfig)
+			go requestConfig.PerformRequest()
 		case <-quit:
 			ticker.Stop()
 			return
@@ -59,7 +58,7 @@ func createTicker(requestConfig RequestConfig) {
 	}
 }
 
-func PerformRequest(requestConfig RequestConfig) {
+func (requestConfig *RequestConfig) PerformRequest() {
 
 	fmt.Println("PerformRequest")
 	var request *http.Request
@@ -72,16 +71,16 @@ func PerformRequest(requestConfig RequestConfig) {
 		if requestConfig.Headers[ContentType] == JsonContentType {
 			request, reqErr = http.NewRequest(requestConfig.RequestType,
 				requestConfig.Url,
-				getJsonParamsBody(requestConfig.FormParams))
+				GetJsonParamsBody(requestConfig.FormParams))
 
 		} else if requestConfig.Headers[ContentType] == FormContentType {
-			urlParams := getUrlParams(requestConfig.FormParams)
+			urlParams := GetUrlParams(requestConfig.FormParams)
 			request, reqErr = http.NewRequest(requestConfig.RequestType,
 				requestConfig.Url,
 				bytes.NewBufferString(urlParams.Encode()))
 			request.Header.Add(ContentLength, strconv.Itoa(len(urlParams.Encode())))
 		} else {
-			urlParams := getUrlParams(requestConfig.FormParams)
+			urlParams := GetUrlParams(requestConfig.FormParams)
 			request, reqErr = http.NewRequest(requestConfig.RequestType,
 				requestConfig.Url,
 				bytes.NewBufferString(urlParams.Encode()))
@@ -95,7 +94,7 @@ func PerformRequest(requestConfig RequestConfig) {
 		fmt.Println("Request Error : " + reqErr.Error())
 	}
 
-	addHeaders(request, requestConfig.Headers)
+	AddHeaders(request, requestConfig.Headers)
 
 	fmt.Println("PerformRequest")
 	timeout := time.Duration(10 * time.Second)
@@ -121,22 +120,18 @@ func PerformRequest(requestConfig RequestConfig) {
 		fmt.Println("Request Status Error : Expected - ", requestConfig.Url, requestConfig.ResponseCode, " Got %v", getResponse.Status)
 	}
 
-	database.WritePoints(requestConfig.Url, elapsed.Nanoseconds()/1000000, requestConfig.RequestType)
-
 	fmt.Println("Time Taken took %s", elapsed)
-	database.GetMeanResponseTime(requestConfig.Url, 5)
-
-	database.GetErrorsCount(requestConfig.Url, 5)
+	database.AddToDatabase(database.Message{"hi", "gsdg", "gdgf", 12})
 
 }
 
-func addHeaders(req *http.Request, headers map[string]string) {
+func AddHeaders(req *http.Request, headers map[string]string) {
 	for key, value := range headers {
 		req.Header.Add(key, value)
 	}
 }
 
-func getUrlParams(params map[string]string) url.Values {
+func GetUrlParams(params map[string]string) url.Values {
 	urlParams := url.Values{}
 	i := 0
 	for key, value := range params {
@@ -152,7 +147,7 @@ func getUrlParams(params map[string]string) url.Values {
 	return urlParams
 }
 
-func getJsonParamsBody(params map[string]string) io.Reader {
+func GetJsonParamsBody(params map[string]string) io.Reader {
 	data, jsonErr := json.Marshal(params)
 	fmt.Println("json data ", string(data), " ", jsonErr)
 	return bytes.NewBuffer(data)
