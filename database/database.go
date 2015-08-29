@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 )
 
@@ -28,17 +29,27 @@ type DatabaseTypes struct {
 	InfluxDb InfluxDb `json:"influxDb"`
 }
 
-func AddToDatabases(db Database) {
+func AddNew(databaseTypes DatabaseTypes) {
 
-	dbErr := db.Initialize()
+	v := reflect.ValueOf(databaseTypes)
 
-	if dbErr != nil {
-		panic(dbErr)
+	for i := 0; i < v.NumField(); i++ {
+		bytesCount, err := fmt.Print(v.Field(i).Interface().(Database))
+		//Check whether notify object is empty . if its not empty add to the list
+		if bytesCount > 3 && err == nil {
+			dbList = append(dbList, v.Field(i).Interface().(Database))
+		}
 	}
 
-	dbList = append(dbList, db)
-	dbMain = db
+	for _, value := range dbList {
 
+		initErr := value.Initialize()
+
+		if initErr != nil {
+			panic(initErr)
+		}
+
+	}
 }
 
 func CreateNotificationTickers() {

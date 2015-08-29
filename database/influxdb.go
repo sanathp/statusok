@@ -7,7 +7,6 @@ import (
 	"github.com/influxdb/influxdb/client"
 	"log"
 	"net/url"
-	"os"
 	"time"
 )
 
@@ -15,44 +14,53 @@ type InfluxDb struct {
 	Host         string `json:"host"`
 	Port         int    `json:"port"`
 	DatabaseName string `json:"databaseName"`
+	Username     string `json:"username"`
+	Password     string `json:"password"`
 }
 
 var (
 	influxDBcon *client.Client
 )
 
-func (influxDb *InfluxDb) Initialize() error {
+func (influxDb InfluxDb) Initialize() error {
 	u, err := url.Parse(fmt.Sprintf("http://%s:%d", influxDb.Host, influxDb.Port))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	conf := client.Config{
 		URL:      *u,
-		Username: os.Getenv("INFLUX_USER"),
-		Password: os.Getenv("INFLUX_PWD"),
+		Username: influxDb.Username,
+		Password: influxDb.Password,
 	}
 
 	influxDBcon, err = client.NewClient(conf)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	dur, ver, err := influxDBcon.Ping()
+	_, ver, err := influxDBcon.Ping()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	createDbErr := createDatabase(influxDb.DatabaseName)
 	if createDbErr != nil {
 		return createDbErr
 	}
-	log.Printf("Happy as a Hippo! %v, %s", dur, ver)
+
+	log.Printf("Successfuly connected to Influx Db! , %s", ver)
+
 	return nil
 }
 
-func (influxDb *InfluxDb) GetMeanResponseTime(Url string, span int) (float64, error) {
+//TODO: use limit insetead of time ?
+//https://influxdb.com/docs/v0.8/api/query_language.html
+func (influxDb InfluxDb) GetMeanResponseTime(Url string, span int) (float64, error) {
+
 	q := fmt.Sprintf(`select mean(responseTime) from "%s" WHERE time > now() - %dm GROUP BY time(%dm)`, Url, span, span)
+
 	res, err := queryDB(q, influxDb.DatabaseName)
+
 	if err != nil {
 		fmt.Println(err)
 		return 0, err
@@ -82,7 +90,7 @@ func (influxDb *InfluxDb) GetMeanResponseTime(Url string, span int) (float64, er
 	return 0, errors.New("error")
 }
 
-func (influxDb *InfluxDb) GetErrorsCount(Url string, span int) (int64, error) {
+func (influxDb InfluxDb) GetErrorsCount(Url string, span int) (int64, error) {
 	//TODO:fix the value insde count for errors
 	q := fmt.Sprintf(`select count(responseTime) from "%s" WHERE time > now() - %dm GROUP BY time(%dm)`, Url, span, span)
 
@@ -94,10 +102,9 @@ func (influxDb *InfluxDb) GetErrorsCount(Url string, span int) (int64, error) {
 	}
 
 	count := res[0].Series[0].Values[len(res[0].Series[0].Values)-1][1]
-	fmt.Println("Found a total of records", count)
-	if count == nil {
 
-		return 0, err
+	if count == nil {
+		return 0, nil
 	}
 	value, convErr := count.(json.Number).Int64()
 
@@ -116,7 +123,7 @@ func createDatabase(databaseName string) error {
 	return err
 }
 
-func (influxDb *InfluxDb) AddToDatabase(message Message) error {
+func (influxDb InfluxDb) AddToDatabase(message Message) error {
 
 	var pts = make([]client.Point, 0)
 	point := client.Point{

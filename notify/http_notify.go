@@ -1,4 +1,4 @@
-package notifications
+package notify
 
 import (
 	"bytes"
@@ -15,7 +15,11 @@ type HttpNotify struct {
 	FormParams  map[string]string `json:"params"` //Todo SHould be interface ?
 }
 
-func (httpNotify *HttpNotify) SendNotification(message Message) error {
+func (httpNotify HttpNotify) Initialize() error {
+	return nil
+}
+
+func (httpNotify HttpNotify) SendNotification(message Notification) error {
 	var request *http.Request
 	var reqErr error
 	if len(httpNotify.FormParams) == 0 {

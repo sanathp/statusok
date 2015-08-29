@@ -1,8 +1,10 @@
-package notifications
+package notify
 
 import (
+	"errors"
 	"fmt"
 	"github.com/mailgun/mailgun-go"
+	"strings"
 )
 
 var mailGunClient mailgun.Mailgun
@@ -14,7 +16,23 @@ type MailgunNotify struct {
 	PublicApiKey string `json:"publicApiKey"`
 }
 
-func (mailgunNotify *MailgunNotify) Initialize() error {
+func (mailgunNotify MailgunNotify) Initialize() error {
+	if !validateEmail(mailgunNotify.Email) {
+		return errors.New("Mailgun: Invalid Email Address")
+	}
+
+	if len(strings.TrimSpace(mailgunNotify.ApiKey)) == 0 {
+		return errors.New("Mailgun: Invalid Api Key")
+	}
+
+	if len(strings.TrimSpace(mailgunNotify.Domain)) == 0 {
+		return errors.New("Mailgun: Invalid Domain name")
+	}
+
+	if len(strings.TrimSpace(mailgunNotify.PublicApiKey)) == 0 {
+		return errors.New("Mailgun: Invalid PublicApiKey")
+	}
+
 	mailGunClient = mailgun.NewMailgun(mailgunNotify.Domain, mailgunNotify.ApiKey, mailgunNotify.PublicApiKey)
 	//Send Test Email ?
 	//Check response
@@ -22,7 +40,7 @@ func (mailgunNotify *MailgunNotify) Initialize() error {
 	return nil
 }
 
-func (mailgunNotify *MailgunNotify) SendNotification(message Message) error {
+func (mailgunNotify MailgunNotify) SendNotification(message Notification) error {
 
 	if mailGunClient == nil {
 		mailgunNotify.Initialize()
