@@ -1,32 +1,55 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
 )
 
+const ()
+
 var (
 	errorCount = 0
+	urlsMap    map[string]int
 	dbMain     Database
 	dbList     []Database
+
+	ErrResposeCode   = errors.New("Response code do not Match")
+	ErrTimeout       = errors.New("Request Time out Error")
+	ErrCreateRequest = errors.New("Invalid Request Config.Not able to create request")
+	ErrDoRequest     = errors.New("Request failed")
 )
 
-type Message struct {
-	MessageText  string
+type RequestInfo struct {
 	Url          string
 	RequestType  string
+	ResponseCode int
 	ResponseTime int64
+}
+
+type ErrorInfo struct {
+	Url          string
+	RequestType  string
+	ResponseCode int
+	ResponseBody string
+	Reason       error
+	OtherInfo    string
 }
 
 type Database interface {
 	Initialize() error
-	AddToDatabase(message Message) error
+	AddRequestInfo(requestInfo RequestInfo) error
+	AddErrorInfo(errorInfo ErrorInfo) error
 	GetMeanResponseTime(url string, timeSpan int) (float64, error)
 }
 
 type DatabaseTypes struct {
 	InfluxDb InfluxDb `json:"influxDb"`
+}
+
+func Initialize(urls map[string]int) {
+	urlsMap = urls
 }
 
 func AddNew(databaseTypes DatabaseTypes) {
@@ -50,6 +73,15 @@ func AddNew(databaseTypes DatabaseTypes) {
 		}
 
 	}
+
+	//Set first database as primary database for monitoring
+	//TODO: mention this in guide
+	if len(dbList) != 0 {
+		dbMain = dbList[0]
+	} else {
+		//TODO: how to monitor here
+		fmt.Println("No Databse is selected")
+	}
 }
 
 func CreateNotificationTickers() {
@@ -67,20 +99,30 @@ func CreateNotificationTickers() {
 		}
 	}
 }
-func CheckStatus() {
 
-	/*
-		for _, req := range requests.RequestsList {
-			//TODO: which one to lect for notifications
-			times, err := dbMain.GetMeanResponseTime(req.Url, 5)
-			fmt.Println("error validateAndSendNotification", err)
-			if times > 50 {
-				//sendNotification()
-			}
-		}
-	*/
+func AddRequestInfo(requestInfo RequestInfo) {
+	//Insert to all databses
+	for _, db := range dbList {
+		go db.AddRequestInfo(requestInfo)
+	}
 }
 
-func AddToDatabase(message Message) {
+func AddErrorInfo(errorInfo ErrorInfo) {
+	//Insert to all databses
+	for _, db := range dbList {
+		go db.AddErrorInfo(errorInfo)
+	}
+}
+
+func CheckStatus() {
+
+	for url, _ := range urlsMap {
+		//TODO: which one to lect for notifications
+		times, err := dbMain.GetMeanResponseTime(url, 5)
+		fmt.Println("error validateAndSendNotification", err)
+		if times > 50 {
+			//sendNotification()
+		}
+	}
 
 }

@@ -3,6 +3,7 @@ package requests
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/sanathp/StatusOk/database"
 	"io"
@@ -58,7 +59,7 @@ func createTicker(requestConfig RequestConfig) {
 	}
 }
 
-func (requestConfig *RequestConfig) PerformRequest() {
+func (requestConfig *RequestConfig) PerformRequest() error {
 
 	fmt.Println("PerformRequest")
 	var request *http.Request
@@ -69,9 +70,23 @@ func (requestConfig *RequestConfig) PerformRequest() {
 			nil)
 	} else {
 		if requestConfig.Headers[ContentType] == JsonContentType {
+			jsonBody, jsonErr := GetJsonParamsBody(requestConfig.FormParams)
+			if jsonErr != nil {
+				//Not able to create Request object.Add Error to Database
+				go database.AddErrorInfo(database.ErrorInfo{
+					Url:          requestConfig.Url,
+					RequestType:  requestConfig.RequestType,
+					ResponseCode: 0,
+					ResponseBody: "",
+					Reason:       database.ErrCreateRequest,
+					OtherInfo:    jsonErr.Error(),
+				})
+
+				return jsonErr
+			}
 			request, reqErr = http.NewRequest(requestConfig.RequestType,
 				requestConfig.Url,
-				GetJsonParamsBody(requestConfig.FormParams))
+				jsonBody)
 
 		} else if requestConfig.Headers[ContentType] == FormContentType {
 			urlParams := GetUrlParams(requestConfig.FormParams)
@@ -91,13 +106,23 @@ func (requestConfig *RequestConfig) PerformRequest() {
 	}
 
 	if reqErr != nil {
-		fmt.Println("Request Error : " + reqErr.Error())
+		//Not able to create Request object.Add Error to Database
+		go database.AddErrorInfo(database.ErrorInfo{
+			Url:          requestConfig.Url,
+			RequestType:  requestConfig.RequestType,
+			ResponseCode: 0,
+			ResponseBody: "",
+			Reason:       database.ErrCreateRequest,
+			OtherInfo:    reqErr.Error(),
+		})
+
+		return reqErr
 	}
 
 	AddHeaders(request, requestConfig.Headers)
 
-	fmt.Println("PerformRequest")
-	timeout := time.Duration(10 * time.Second)
+	//TODO: make this configurable?
+	timeout := 10 * requestConfig.Time
 
 	client := &http.Client{
 		Timeout: timeout,
@@ -108,21 +133,64 @@ func (requestConfig *RequestConfig) PerformRequest() {
 	getResponse, respErr := client.Do(request)
 
 	if respErr != nil {
-		fmt.Println("Response Error :" + respErr.Error())
-		return
+		//Request failed . Add error info to database
+		var statusCode int
+		if getResponse == nil {
+			statusCode = 0
+		} else {
+			statusCode = getResponse.StatusCode
+		}
+		go database.AddErrorInfo(database.ErrorInfo{
+			Url:          requestConfig.Url,
+			RequestType:  requestConfig.RequestType,
+			ResponseCode: statusCode,
+			ResponseBody: convertResponseToString(getResponse),
+			Reason:       database.ErrDoRequest,
+			OtherInfo:    respErr.Error(),
+		})
+		return reqErr
 	}
-
-	elapsed := time.Since(start)
 
 	defer getResponse.Body.Close()
 
 	if getResponse.StatusCode != requestConfig.ResponseCode {
-		fmt.Println("Request Status Error : Expected - ", requestConfig.Url, requestConfig.ResponseCode, " Got %v", getResponse.Status)
+		//Response code is not the expected one .Add Error to database
+		go database.AddErrorInfo(database.ErrorInfo{
+			Url:          requestConfig.Url,
+			RequestType:  requestConfig.RequestType,
+			ResponseCode: getResponse.StatusCode,
+			ResponseBody: convertResponseToString(getResponse),
+			Reason:       database.ErrResposeCode,
+			OtherInfo:    "",
+		})
+		return database.ErrResposeCode
 	}
 
-	fmt.Println("Time Taken took %s", elapsed)
-	database.AddToDatabase(database.Message{"hi", "gsdg", "gdgf", 12})
+	elapsed := time.Since(start)
+	//Request succesfull . Add infomartion to Database
+	go database.AddRequestInfo(database.RequestInfo{
+		Url:          requestConfig.Url,
+		RequestType:  requestConfig.RequestType,
+		ResponseCode: getResponse.StatusCode,
+		ResponseTime: elapsed.Nanoseconds() / 100000,
+	})
 
+	return nil
+}
+
+//convert response body to string
+func convertResponseToString(resp *http.Response) string {
+	if resp == nil {
+		return " "
+	}
+	buf := new(bytes.Buffer)
+	_, bufErr := buf.ReadFrom(resp.Body)
+
+	if bufErr != nil {
+		return " "
+	}
+
+	return buf.String()
 }
 
 func AddHeaders(req *http.Request, headers map[string]string) {
@@ -142,13 +210,19 @@ func GetUrlParams(params map[string]string) url.Values {
 		}
 	}
 
-	fmt.Println("url values", urlParams)
-
 	return urlParams
 }
 
-func GetJsonParamsBody(params map[string]string) io.Reader {
+func GetJsonParamsBody(params map[string]string) (io.Reader, error) {
+
 	data, jsonErr := json.Marshal(params)
-	fmt.Println("json data ", string(data), " ", jsonErr)
-	return bytes.NewBuffer(data)
+
+	if jsonErr != nil {
+
+		jsonErr = errors.New("Invalid Parameters for Content-Type application/json : " + jsonErr.Error())
+
+		return nil, jsonErr
+	}
+
+	return bytes.NewBuffer(data), nil
 }

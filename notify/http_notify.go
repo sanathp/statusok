@@ -28,9 +28,14 @@ func (httpNotify HttpNotify) SendNotification(message Notification) error {
 			nil)
 	} else {
 		if httpNotify.Headers[requests.ContentType] == requests.JsonContentType {
+
+			jsonBody, jsonErr := requests.GetJsonParamsBody(httpNotify.FormParams)
+			if jsonErr != nil {
+				return jsonErr
+			}
 			request, reqErr = http.NewRequest(httpNotify.RequestType,
 				httpNotify.Url,
-				requests.GetJsonParamsBody(httpNotify.FormParams))
+				jsonBody)
 
 		} else if httpNotify.Headers[requests.ContentType] == requests.FormContentType {
 			urlParams := requests.GetUrlParams(httpNotify.FormParams)

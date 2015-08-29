@@ -123,19 +123,17 @@ func createDatabase(databaseName string) error {
 	return err
 }
 
-func (influxDb InfluxDb) AddToDatabase(message Message) error {
+func (influxDb InfluxDb) AddRequestInfo(requestInfo RequestInfo) error {
 
 	var pts = make([]client.Point, 0)
 	point := client.Point{
-		Measurement: message.Url,
+		Measurement: requestInfo.Url,
 		Tags: map[string]string{
-			"requestType":  message.RequestType,
-			"responseTime": "responseTime",
+			"requestType": requestInfo.RequestType,
 		},
 		Fields: map[string]interface{}{
-			"responseTime": message.ResponseTime,
-			"errorReason":  "Not Found ",
-			"errorMessage": "this the response we got",
+			"responseTime": requestInfo.ResponseTime,
+			"responseCode": requestInfo.ResponseCode,
 		},
 		Time:      time.Now(),
 		Precision: "ms",
@@ -149,10 +147,46 @@ func (influxDb InfluxDb) AddToDatabase(message Message) error {
 		RetentionPolicy: "default",
 	}
 
+	hi, err := influxDBcon.Write(bps)
+
+	if err != nil {
+		fmt.Println("Influx db ", err)
+		return err
+	}
+	return nil
+}
+
+func (influxDb InfluxDb) AddErrorInfo(errorInfo ErrorInfo) error {
+
+	var pts = make([]client.Point, 0)
+	point := client.Point{
+		Measurement: errorInfo.Url,
+		Tags: map[string]string{
+			"requestType": errorInfo.RequestType,
+			"reason":      errorInfo.Reason.Error(),
+		},
+		Fields: map[string]interface{}{
+			"responseBody": errorInfo.ResponseBody,
+			"responseCode": errorInfo.ResponseCode,
+			"otherInfo":    errorInfo.OtherInfo,
+		},
+		Time:      time.Now(),
+		Precision: "ms",
+	}
+
+	pts = append(pts, point)
+
+	bps := client.BatchPoints{
+		Points:   pts,
+		Database: influxDb.DatabaseName,
+		//TODO: make this variable?
+		RetentionPolicy: "default",
+	}
+
 	_, err := influxDBcon.Write(bps)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Influx db ", err)
 	}
 	return nil
 }

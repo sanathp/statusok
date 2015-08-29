@@ -25,6 +25,8 @@ func main() {
 	//TODO: run it for 1 day with all diffrenet type of requests
 	//TODO: add cli tool
 	//TODO: validations for Config.Json file
+	//TODO: build a website using github pages
+	//TODO: create Docker file with complete setup
 
 	r := gin.Default()
 	configFile, err := os.Open("config.json")
@@ -40,13 +42,23 @@ func main() {
 		fmt.Println("Error parsing config file", err.Error())
 	}
 
-	//TODO:
-	//database.Initialize(jsonData.Requests)
 	database.AddNew(jsonData.Database)
 	notify.AddNew(jsonData.Notifications)
 
+	//TODO: send all requests for one time and stop of there are any errors
 	requests.RequestsInit(jsonData.Requests)
 	requests.StartMonitoring()
+
+	//Initialze urls map for monitoring
+	var urls map[string]int
+
+	urls = make(map[string]int)
+
+	for _, value := range jsonData.Requests {
+		urls[value.Url] = 0
+	}
+
+	database.Initialize(urls)
 
 	r.Run(":3143")
 }
