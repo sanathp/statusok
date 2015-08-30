@@ -45,7 +45,11 @@ func (influxDb InfluxDb) Initialize() error {
 	}
 	createDbErr := createDatabase(influxDb.DatabaseName)
 	if createDbErr != nil {
-		return createDbErr
+
+		if createDbErr.Error() != "database already exists" {
+			return createDbErr
+		}
+
 	}
 
 	log.Printf("Successfuly connected to Influx Db! , %s", ver)
@@ -150,7 +154,7 @@ func (influxDb InfluxDb) AddRequestInfo(requestInfo RequestInfo) error {
 	hi, err := influxDBcon.Write(bps)
 
 	if err != nil {
-		fmt.Println("Influx db ", err)
+		fmt.Println("Influx db ", err, hi)
 		return err
 	}
 	return nil

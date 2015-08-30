@@ -4,14 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
+
+	"github.com/sanathp/StatusOk/notify"
 )
 
 const ()
 
 var (
 	errorCount = 0
-	urlsMap    map[string]int
 	dbMain     Database
 	dbList     []Database
 
@@ -19,6 +21,10 @@ var (
 	ErrTimeout       = errors.New("Request Time out Error")
 	ErrCreateRequest = errors.New("Invalid Request Config.Not able to create request")
 	ErrDoRequest     = errors.New("Request failed")
+
+	meanUrlsCount    int
+	urlResponseTimes map[string]int64
+	responseMean     map[string][]int64
 )
 
 type RequestInfo struct {
@@ -48,8 +54,15 @@ type DatabaseTypes struct {
 	InfluxDb InfluxDb `json:"influxDb"`
 }
 
-func Initialize(urls map[string]int) {
-	urlsMap = urls
+func Initialize(urls map[string]int64, requestsMean int) {
+	meanUrlsCount = requestsMean
+	//TODO: try to make all slices as pointers
+	responseMean = make(map[string][]int64)
+
+	for url, _ := range urls {
+		queue := make([]int64, 0)
+		responseMean[url] = queue
+	}
 }
 
 func AddNew(databaseTypes DatabaseTypes) {
@@ -57,9 +70,11 @@ func AddNew(databaseTypes DatabaseTypes) {
 	v := reflect.ValueOf(databaseTypes)
 
 	for i := 0; i < v.NumField(); i++ {
-		bytesCount, err := fmt.Print(v.Field(i).Interface().(Database))
+		dbString := fmt.Sprint(v.Field(i).Interface().(Database))
+
 		//Check whether notify object is empty . if its not empty add to the list
-		if bytesCount > 3 && err == nil {
+		dbString = strings.Replace(dbString, " ", "", -1)
+		if len(dbString) > 2 {
 			dbList = append(dbList, v.Field(i).Interface().(Database))
 		}
 	}
@@ -101,7 +116,18 @@ func CreateNotificationTickers() {
 }
 
 func AddRequestInfo(requestInfo RequestInfo) {
+	fmt.Println("Got Reqest info ", requestInfo.Url, " ", requestInfo.ResponseTime)
 	//Insert to all databses
+	addResponseTimeToUrl(requestInfo.Url, requestInfo.ResponseTime)
+	mean, meanErr := getMeanResponseTimeOfUrl(requestInfo.Url)
+	if meanErr == nil {
+		if mean > urlResponseTimes[requestInfo.Url] {
+			notify.SendResponseTimeNotification(notify.ResponseTypeNotification{
+				requestInfo.Url,
+				requestInfo.RequestType,
+				mean})
+		}
+	}
 	for _, db := range dbList {
 		go db.AddRequestInfo(requestInfo)
 	}
@@ -109,6 +135,7 @@ func AddRequestInfo(requestInfo RequestInfo) {
 
 func AddErrorInfo(errorInfo ErrorInfo) {
 	//Insert to all databses
+	fmt.Println("Got Error info ", errorInfo.Url, " ", errorInfo.Reason, " ", errorInfo.OtherInfo)
 	for _, db := range dbList {
 		go db.AddErrorInfo(errorInfo)
 	}
@@ -116,7 +143,7 @@ func AddErrorInfo(errorInfo ErrorInfo) {
 
 func CheckStatus() {
 
-	for url, _ := range urlsMap {
+	for url, _ := range responseMean {
 		//TODO: which one to lect for notifications
 		times, err := dbMain.GetMeanResponseTime(url, 5)
 		fmt.Println("error validateAndSendNotification", err)
@@ -125,4 +152,36 @@ func CheckStatus() {
 		}
 	}
 
+}
+
+func addResponseTimeToUrl(url string, responseTime int64) {
+	queue := responseMean[url]
+
+	if len(queue) == meanUrlsCount {
+		queue = queue[1:]
+		queue = append(queue, responseTime)
+	} else {
+		queue = append(queue, responseTime)
+	}
+
+	responseMean[url] = queue
+}
+
+func getMeanResponseTimeOfUrl(url string) (int64, error) {
+
+	queue := responseMean[url]
+
+	if len(queue) < meanUrlsCount {
+		return 0, errors.New("Stil the count has not been reached")
+
+	}
+
+	var sum int64
+
+	for _, val := range queue {
+		sum = sum + val
+		fmt.Println("cuurent queue ", val)
+	}
+
+	return sum / int64(meanUrlsCount), nil
 }

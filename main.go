@@ -29,7 +29,7 @@ func main() {
 	//TODO: create Docker file with complete setup
 
 	r := gin.Default()
-	configFile, err := os.Open("config.json")
+	configFile, err := os.Open("test_config.json")
 
 	if err != nil {
 		fmt.Println("Error opening config file", err.Error())
@@ -45,20 +45,21 @@ func main() {
 	database.AddNew(jsonData.Database)
 	notify.AddNew(jsonData.Notifications)
 
+	notify.SendTestNotification()
+
 	//TODO: send all requests for one time and stop of there are any errors
 	requests.RequestsInit(jsonData.Requests)
 	requests.StartMonitoring()
 
 	//Initialze urls map for monitoring
-	var urls map[string]int
 
-	urls = make(map[string]int)
+	urls := make(map[string]int64)
 
 	for _, value := range jsonData.Requests {
-		urls[value.Url] = 0
+		urls[value.Url] = value.ResponseTime
 	}
 
-	database.Initialize(urls)
+	database.Initialize(urls, 3)
 
 	r.Run(":3143")
 }
