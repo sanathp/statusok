@@ -2,10 +2,20 @@ package notify
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/sanathp/StatusOk/requests"
+	"io"
 	"net/http"
+	"net/url"
 	"strconv"
+)
+
+const (
+	ContentType     = "Content-Type"
+	ContentLength   = "Content-Length"
+	FormContentType = "application/x-www-form-urlencoded"
+	JsonContentType = "application/json"
 )
 
 type HttpNotify struct {
@@ -19,6 +29,7 @@ func (httpNotify HttpNotify) Initialize() error {
 	return nil
 }
 
+//TODO:post request to queue is not completly working test it
 func (httpNotify HttpNotify) SendNotification(message Notification) error {
 	var request *http.Request
 	var reqErr error
@@ -27,9 +38,9 @@ func (httpNotify HttpNotify) SendNotification(message Notification) error {
 			httpNotify.Url,
 			nil)
 	} else {
-		if httpNotify.Headers[requests.ContentType] == requests.JsonContentType {
+		if httpNotify.Headers[ContentType] == JsonContentType {
 
-			jsonBody, jsonErr := requests.GetJsonParamsBody(httpNotify.FormParams)
+			jsonBody, jsonErr := GetJsonParamsBody(httpNotify.FormParams)
 			if jsonErr != nil {
 				return jsonErr
 			}
@@ -37,20 +48,20 @@ func (httpNotify HttpNotify) SendNotification(message Notification) error {
 				httpNotify.Url,
 				jsonBody)
 
-		} else if httpNotify.Headers[requests.ContentType] == requests.FormContentType {
-			urlParams := requests.GetUrlParams(httpNotify.FormParams)
+		} else if httpNotify.Headers[ContentType] == FormContentType {
+			urlParams := GetUrlParams(httpNotify.FormParams)
 			request, reqErr = http.NewRequest(httpNotify.RequestType,
 				httpNotify.Url,
 				bytes.NewBufferString(urlParams.Encode()))
-			request.Header.Add(requests.ContentLength, strconv.Itoa(len(urlParams.Encode())))
+			request.Header.Add(ContentLength, strconv.Itoa(len(urlParams.Encode())))
 		} else {
-			urlParams := requests.GetUrlParams(httpNotify.FormParams)
+			urlParams := GetUrlParams(httpNotify.FormParams)
 			request, reqErr = http.NewRequest(httpNotify.RequestType,
 				httpNotify.Url,
 				bytes.NewBufferString(urlParams.Encode()))
 
-			request.Header.Add(requests.ContentType, requests.FormContentType)
-			request.Header.Add(requests.ContentLength, strconv.Itoa(len(urlParams.Encode())))
+			request.Header.Add(ContentType, FormContentType)
+			request.Header.Add(ContentLength, strconv.Itoa(len(urlParams.Encode())))
 		}
 	}
 
@@ -58,7 +69,7 @@ func (httpNotify HttpNotify) SendNotification(message Notification) error {
 		fmt.Println("Request Error : " + reqErr.Error())
 	}
 
-	requests.AddHeaders(request, httpNotify.Headers)
+	AddHeaders(request, httpNotify.Headers)
 
 	fmt.Println("PerformRequest")
 
@@ -79,4 +90,38 @@ func (httpNotify HttpNotify) SendNotification(message Notification) error {
 
 	return nil
 
+}
+
+func AddHeaders(req *http.Request, headers map[string]string) {
+	for key, value := range headers {
+		req.Header.Add(key, value)
+	}
+}
+
+func GetUrlParams(params map[string]string) url.Values {
+	urlParams := url.Values{}
+	i := 0
+	for key, value := range params {
+		if i == 0 {
+			urlParams.Set(key, value)
+		} else {
+			urlParams.Add(key, value)
+		}
+	}
+
+	return urlParams
+}
+
+func GetJsonParamsBody(params map[string]string) (io.Reader, error) {
+
+	data, jsonErr := json.Marshal(params)
+
+	if jsonErr != nil {
+
+		jsonErr = errors.New("Invalid Parameters for Content-Type application/json : " + jsonErr.Error())
+
+		return nil, jsonErr
+	}
+
+	return bytes.NewBuffer(data), nil
 }

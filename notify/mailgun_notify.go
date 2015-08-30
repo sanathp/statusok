@@ -47,8 +47,7 @@ func (mailgunNotify MailgunNotify) SendNotification(message Notification) error 
 	}
 	fmt.Println("Mailgun notify called", mailgunNotify)
 	mail := mailGunClient.NewMessage("StatusOkNotifier <notify@StatusOk.com>",
-		"Hi Proud Pichi Pulka",
-		"To Proud pichi pulka , \n \n  You Received this ma", mailgunNotify.Email)
+		message.Message, mailgunNotify.Email)
 
 	response, id, _ := mailGunClient.Send(mail)
 	fmt.Printf("Response ID: %s\n", id)
