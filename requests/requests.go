@@ -13,8 +13,10 @@ import (
 	"time"
 )
 
+//TODO: increase menory efficiency by using pointers ?
 var (
-	RequestsList []RequestConfig
+	RequestsList   []RequestConfig
+	requestChannel chan RequestConfig
 )
 
 const (
@@ -30,14 +32,19 @@ type RequestConfig struct {
 	Headers      map[string]string `json:"headers"`
 	FormParams   map[string]string `json:"params"` //Todo SHould be interface ?
 	ResponseCode int               `json:"responseCode"`
-	Time         time.Duration     `json:"time"`
+	ResponseTime int64             `json:"responseTime"`
+	CheckEvery   time.Duration     `json:"checkEvery"`
 }
 
 func RequestsInit(data []RequestConfig) {
 	RequestsList = data
+	//TODO: decide lenght of buffer ?
+	requestChannel = make(chan RequestConfig, len(data))
 }
 
 func StartMonitoring() {
+	fmt.Println("Number of requests = ", len(RequestsList))
+	go listenToRequestChannel()
 	for _, requestConfig := range RequestsList {
 		go createTicker(requestConfig)
 	}
@@ -45,25 +52,44 @@ func StartMonitoring() {
 
 func createTicker(requestConfig RequestConfig) {
 
-	fmt.Println("createTicker")
-	var ticker *time.Ticker = time.NewTicker(requestConfig.Time * time.Second)
+	var ticker *time.Ticker = time.NewTicker(requestConfig.CheckEvery * time.Second)
 	quit := make(chan struct{})
 	for {
 		select {
 		case <-ticker.C:
-			go requestConfig.PerformRequest()
+			//TODO: instead of directly permofrming a request to write to a channel.
+			//decide how many requests to keep in channel. take value from config
+			//go requestConfig.PerformRequest()
+			fmt.Println("add to channel ", requestConfig.Url)
+			requestChannel <- requestConfig
 		case <-quit:
 			ticker.Stop()
 			return
 		}
 	}
 }
+func listenToRequestChannel() {
+	//var wg sync.WaitGroup
+	var throttle = make(chan int, 1)
 
-func (requestConfig *RequestConfig) PerformRequest() error {
+	for {
+		select {
+		case requect := <-requestChannel:
+			throttle <- 1
+			go PerformRequest(requect, throttle)
+		}
+	}
 
-	fmt.Println("PerformRequest")
+}
+
+func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
+	defer func() {
+		<-throttle
+	}()
+	fmt.Println("PerformRequest ", requestConfig.Url)
 	var request *http.Request
 	var reqErr error
+
 	if len(requestConfig.FormParams) == 0 {
 		request, reqErr = http.NewRequest(requestConfig.RequestType,
 			requestConfig.Url,
@@ -121,13 +147,16 @@ func (requestConfig *RequestConfig) PerformRequest() error {
 
 	AddHeaders(request, requestConfig.Headers)
 
-	//TODO: make this configurable?
-	timeout := 10 * requestConfig.Time
+	//TODO: put timeout ?
+	/*
+		timeout := 10 * requestConfig.ResponseTime
 
-	client := &http.Client{
-		Timeout: timeout,
-	}
+		client := &http.Client{
+			Timeout: timeout,
+		}
+	*/
 
+	client := &http.Client{}
 	start := time.Now()
 
 	getResponse, respErr := client.Do(request)
@@ -148,7 +177,7 @@ func (requestConfig *RequestConfig) PerformRequest() error {
 			Reason:       database.ErrDoRequest,
 			OtherInfo:    respErr.Error(),
 		})
-		return reqErr
+		return respErr
 	}
 
 	defer getResponse.Body.Close()
@@ -172,7 +201,7 @@ func (requestConfig *RequestConfig) PerformRequest() error {
 		Url:          requestConfig.Url,
 		RequestType:  requestConfig.RequestType,
 		ResponseCode: getResponse.StatusCode,
-		ResponseTime: elapsed.Nanoseconds() / 100000,
+		ResponseTime: elapsed.Nanoseconds() / 1000000,
 	})
 
 	return nil
