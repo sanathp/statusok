@@ -22,9 +22,20 @@ var (
 	influxDBcon *client.Client
 )
 
+const (
+	DatabaseName = "InfluxDB"
+)
+
+func (influxDb InfluxDb) GetDatabaseName() string {
+	return DatabaseName
+}
+
 func (influxDb InfluxDb) Initialize() error {
+	println("InfluxDB : Trying to Connect to database ")
+
 	u, err := url.Parse(fmt.Sprintf("http://%s:%d", influxDb.Host, influxDb.Port))
 	if err != nil {
+		println("InfluxDB : Invalid Url,Please check domain name given in config file \nError Details: ", err.Error())
 		return err
 	}
 
@@ -35,24 +46,30 @@ func (influxDb InfluxDb) Initialize() error {
 	}
 
 	influxDBcon, err = client.NewClient(conf)
+
 	if err != nil {
+		println("InfluxDB : Failed to connect to Database . Please check the details entered in the config file\nError Details: ", err.Error())
 		return err
 	}
 
 	_, ver, err := influxDBcon.Ping()
+
 	if err != nil {
+		println("InfluxDB : Failed to connect to Database . Please check the details entered in the config file\nError Details: ", err.Error())
 		return err
 	}
-	createDbErr := createDatabase(influxDb.DatabaseName)
-	if createDbErr != nil {
 
+	createDbErr := createDatabase(influxDb.DatabaseName)
+
+	if createDbErr != nil {
 		if createDbErr.Error() != "database already exists" {
+			println("InfluxDB : Failed to create Database")
 			return createDbErr
 		}
 
 	}
 
-	log.Printf("Successfuly connected to Influx Db! , %s", ver)
+	println("InfluxDB: Successfuly connected . Version:", ver)
 
 	return nil
 }

@@ -3,9 +3,9 @@ package database
 import (
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/sanathp/StatusOk/notify"
 )
@@ -45,9 +45,9 @@ type ErrorInfo struct {
 
 type Database interface {
 	Initialize() error
+	GetDatabaseName() string
 	AddRequestInfo(requestInfo RequestInfo) error
 	AddErrorInfo(errorInfo ErrorInfo) error
-	GetMeanResponseTime(url string, timeSpan int) (float64, error)
 }
 
 type DatabaseTypes struct {
@@ -78,7 +78,6 @@ func AddNew(databaseTypes DatabaseTypes) {
 
 	for i := 0; i < v.NumField(); i++ {
 		dbString := fmt.Sprint(v.Field(i).Interface().(Database))
-
 		//Check whether notify object is empty . if its not empty add to the list
 		dbString = strings.Replace(dbString, " ", "", -1)
 		if len(dbString) > 2 {
@@ -91,7 +90,8 @@ func AddNew(databaseTypes DatabaseTypes) {
 		initErr := value.Initialize()
 
 		if initErr != nil {
-			panic(initErr)
+			println("Failed to Intialize Database ")
+			os.Exit(3)
 		}
 
 	}
@@ -100,25 +100,33 @@ func AddNew(databaseTypes DatabaseTypes) {
 	//TODO: mention this in guide
 	if len(dbList) != 0 {
 		dbMain = dbList[0]
+		addTestErrorAndRequestInfo()
 	} else {
 		//TODO: how to monitor here
-		fmt.Println("No Databse is selected")
+		fmt.Println("No Database selected.")
 	}
 }
 
-func CreateNotificationTickers() {
+func addTestErrorAndRequestInfo() {
 
-	var ticker *time.Ticker = time.NewTicker(10 * time.Second)
-	quit := make(chan struct{})
-	fmt.Println("CreateNotificationTickers")
-	for {
-		select {
-		case <-ticker.C:
-			CheckStatus()
-		case <-quit:
-			ticker.Stop()
-			return
+	println("Adding Test data to your database ....")
+
+	requestInfo := RequestInfo{"http://test.com", "GET", 0, 0}
+
+	errorInfo := ErrorInfo{"http://test.com", "GET", 0, "test response", errors.New("test error"), "test other info"}
+
+	for _, db := range dbList {
+		reqErr := db.AddRequestInfo(requestInfo)
+		if reqErr != nil {
+			println(db.GetDatabaseName, ": Failed to insert Request Info to database.Please check whether database is installed properly")
 		}
+
+		errErr := db.AddErrorInfo(errorInfo)
+
+		if errErr != nil {
+			println(db.GetDatabaseName, ": Failed to insert Error Info to database.Please check whether database is installed properly")
+		}
+
 	}
 }
 
@@ -150,19 +158,6 @@ func AddErrorInfo(errorInfo ErrorInfo) {
 	for _, db := range dbList {
 		go db.AddErrorInfo(errorInfo)
 	}
-}
-
-func CheckStatus() {
-
-	for url, _ := range responseMean {
-		//TODO: which one to lect for notifications
-		times, err := dbMain.GetMeanResponseTime(url, 5)
-		fmt.Println("error validateAndSendNotification", err)
-		if times > 50 {
-			//sendNotification()
-		}
-	}
-
 }
 
 func addResponseTimeToUrl(url string, responseTime int64) {
