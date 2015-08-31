@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 )
@@ -17,6 +18,7 @@ import (
 var (
 	RequestsList   []RequestConfig
 	requestChannel chan RequestConfig
+	throttle       chan int
 )
 
 const (
@@ -36,10 +38,44 @@ type RequestConfig struct {
 	CheckEvery   time.Duration     `json:"checkEvery"`
 }
 
-func RequestsInit(data []RequestConfig) {
+func RequestsInit(data []RequestConfig, concurrency int) {
 	RequestsList = data
+
+	if concurrency == 0 {
+		//TODO: decide default value
+		throttle = make(chan int, 1)
+	} else {
+		throttle = make(chan int, concurrency)
+	}
+
 	//TODO: decide lenght of buffer ?
 	requestChannel = make(chan RequestConfig, len(data))
+
+	if len(data) == 0 {
+		println("\nNo requests to monitor.Please add requests to you config file")
+		os.Exit(3)
+	}
+
+	println("\nSending requests to apis.....making sure everything is right before we start monitoring")
+	println("Api Count: ", len(data))
+	for i, requestConfig := range data {
+		println("Request #", i, " : ", requestConfig.RequestType, " ", requestConfig.Url)
+
+		reqErr := PerformRequest(requestConfig, nil)
+
+		if reqErr != nil {
+			//Request Failed
+			println("\nFailed !!!! Not able to perfome below request")
+			println("\n----Request Deatails---")
+			println("Url :", requestConfig.Url)
+			println("Type :", requestConfig.RequestType)
+			println("Error Reason :", reqErr.Error())
+			println("\nPlease check the config file and try again")
+			os.Exit(3)
+		}
+	}
+
+	println("All requests Successfull")
 }
 
 func StartMonitoring() {
@@ -57,10 +93,6 @@ func createTicker(requestConfig RequestConfig) {
 	for {
 		select {
 		case <-ticker.C:
-			//TODO: instead of directly permofrming a request to write to a channel.
-			//decide how many requests to keep in channel. take value from config
-			//go requestConfig.PerformRequest()
-			fmt.Println("add to channel ", requestConfig.Url)
 			requestChannel <- requestConfig
 		case <-quit:
 			ticker.Stop()
@@ -69,8 +101,6 @@ func createTicker(requestConfig RequestConfig) {
 	}
 }
 func listenToRequestChannel() {
-	//var wg sync.WaitGroup
-	var throttle = make(chan int, 1)
 
 	for {
 		select {
@@ -84,7 +114,9 @@ func listenToRequestChannel() {
 
 func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 	defer func() {
-		<-throttle
+		if throttle != nil {
+			<-throttle
+		}
 	}()
 	fmt.Println("PerformRequest ", requestConfig.Url)
 	var request *http.Request

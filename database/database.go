@@ -13,16 +13,16 @@ import (
 const ()
 
 var (
-	errorCount = 0
-	dbMain     Database
-	dbList     []Database
+	ErrorCount        = 1 //Default Value
+	MeanResponseCount = 5 //Default value
+	dbMain            Database
+	dbList            []Database
 
 	ErrResposeCode   = errors.New("Response code do not Match")
 	ErrTimeout       = errors.New("Request Time out Error")
 	ErrCreateRequest = errors.New("Invalid Request Config.Not able to create request")
 	ErrDoRequest     = errors.New("Request failed")
 
-	meanUrlsCount    int
 	urlResponseTimes map[string]int64
 	responseMean     map[string][]int64
 )
@@ -54,8 +54,15 @@ type DatabaseTypes struct {
 	InfluxDb InfluxDb `json:"influxDb"`
 }
 
-func Initialize(urls map[string]int64, requestsMean int) {
-	meanUrlsCount = requestsMean
+func Initialize(urls map[string]int64, mMeanResponseCount int, mErrorCount int) {
+
+	if mMeanResponseCount != 0 {
+		MeanResponseCount = mMeanResponseCount
+	}
+
+	if mErrorCount != 0 {
+		ErrorCount = mErrorCount
+	}
 	//TODO: try to make all slices as pointers
 	responseMean = make(map[string][]int64)
 
@@ -116,12 +123,16 @@ func CreateNotificationTickers() {
 }
 
 func AddRequestInfo(requestInfo RequestInfo) {
-	fmt.Println("Got Reqest info ", requestInfo.Url, " ", requestInfo.ResponseTime)
+	//fmt.Println("Got Reqest info ", requestInfo.Url, " ", requestInfo.ResponseTime)
 	//Insert to all databses
 	addResponseTimeToUrl(requestInfo.Url, requestInfo.ResponseTime)
 	mean, meanErr := getMeanResponseTimeOfUrl(requestInfo.Url)
 	if meanErr == nil {
 		if mean > urlResponseTimes[requestInfo.Url] {
+			//TODO: when to send notification again ?
+			//Option 1 : clear the queue .but if queue length one , notification will be received every time
+			//Any other better options ?
+			clearQueue(requestInfo.Url)
 			notify.SendResponseTimeNotification(notify.ResponseTypeNotification{
 				requestInfo.Url,
 				requestInfo.RequestType,
@@ -135,7 +146,7 @@ func AddRequestInfo(requestInfo RequestInfo) {
 
 func AddErrorInfo(errorInfo ErrorInfo) {
 	//Insert to all databses
-	fmt.Println("Got Error info ", errorInfo.Url, " ", errorInfo.Reason, " ", errorInfo.OtherInfo)
+	//fmt.Println("Got Error info ", errorInfo.Url, " ", errorInfo.Reason, " ", errorInfo.OtherInfo)
 	for _, db := range dbList {
 		go db.AddErrorInfo(errorInfo)
 	}
@@ -157,7 +168,7 @@ func CheckStatus() {
 func addResponseTimeToUrl(url string, responseTime int64) {
 	queue := responseMean[url]
 
-	if len(queue) == meanUrlsCount {
+	if len(queue) == MeanResponseCount {
 		queue = queue[1:]
 		queue = append(queue, responseTime)
 	} else {
@@ -171,7 +182,7 @@ func getMeanResponseTimeOfUrl(url string) (int64, error) {
 
 	queue := responseMean[url]
 
-	if len(queue) < meanUrlsCount {
+	if len(queue) < MeanResponseCount {
 		return 0, errors.New("Stil the count has not been reached")
 
 	}
@@ -183,5 +194,9 @@ func getMeanResponseTimeOfUrl(url string) (int64, error) {
 		fmt.Println("cuurent queue ", val)
 	}
 
-	return sum / int64(meanUrlsCount), nil
+	return sum / int64(MeanResponseCount), nil
+}
+
+func clearQueue(url string) {
+	responseMean[url] = make([]int64, 0)
 }

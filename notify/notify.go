@@ -9,6 +9,7 @@ import (
 
 //TODO: Decide Pattern for Notification message , what info is required
 //TODO: type of notifications ? and wen to send ? how to take user input values
+//TODO: noftication using smtp request https://github.com/zbindenren/logrus_mail/blob/master/mail.go . testp with your gmail
 type Notification struct {
 	Message string
 }
@@ -63,6 +64,7 @@ func AddNew(notificationTypes NotificationTypes) {
 func SendResponseTimeNotification(responseTypeNotification ResponseTypeNotification) {
 	//TODO: implement this with full data
 	for _, value := range notificationsList {
+		//TODO: exponential retry if fails ?
 		err := value.SendNotification(Notification{"Hi this is notification from StatusOk .Your response time is low"})
 
 		fmt.Println("Test Notivication error ", value, " ", err)
