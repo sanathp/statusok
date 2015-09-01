@@ -16,6 +16,10 @@ type MailgunNotify struct {
 	PublicApiKey string `json:"publicApiKey"`
 }
 
+func (mailgunNotify MailgunNotify) GetClientName() string {
+	return "Mailgun"
+}
+
 func (mailgunNotify MailgunNotify) Initialize() error {
 	if !validateEmail(mailgunNotify.Email) {
 		return errors.New("Mailgun: Invalid Email Address")
@@ -40,18 +44,38 @@ func (mailgunNotify MailgunNotify) Initialize() error {
 	return nil
 }
 
-func (mailgunNotify MailgunNotify) SendNotification(message Notification) error {
+func (mailgunNotify MailgunNotify) SendResponseTimeNotification(responseTimeNotification ResponseTimeNotification) error {
 
-	if mailGunClient == nil {
-		mailgunNotify.Initialize()
+	subject := "Response Time Notification from StatusOK"
+	message := fmt.Sprintf("Notifiaction From StatusOk\nOne of your apis response time is below than expected."+
+		"\nPlease find the Details below"+
+		"\nUrl: %v \nRequestType: %v \nCurrent Average Response Time: %v \n Expected Response Time: %v\n"+
+		"\nThanks", responseTimeNotification.Url, responseTimeNotification.RequestType, responseTimeNotification.MeanResponseTime, responseTimeNotification.ExpectedResponsetime)
+
+	mail := mailGunClient.NewMessage("StatusOkNotifier <notify@StatusOk.com>", subject, message, fmt.Sprintf("<%s>", mailgunNotify.Email))
+	_, _, mailgunErr := mailGunClient.Send(mail)
+
+	if mailgunErr != nil {
+		return mailgunErr
 	}
-	fmt.Println("Mailgun notify called", mailgunNotify)
-	mail := mailGunClient.NewMessage("StatusOkNotifier <notify@StatusOk.com>",
-		message.Message, mailgunNotify.Email)
 
-	response, id, _ := mailGunClient.Send(mail)
-	fmt.Printf("Response ID: %s\n", id)
-	fmt.Printf("Message from server: %s\n", response)
+	return nil
+}
+
+func (mailgunNotify MailgunNotify) SendErrorNotification(errorNotification ErrorNotification) error {
+	subject := "Error Time Notification from StatusOK"
+
+	message := fmt.Sprintf("Notifiaction From StatusOk\nWe are getting error when we try to send request to one of your apis"+
+		"\nPlease find the Details below"+
+		"\nUrl: %v \nRequestType: %v \nError Message: %v \n Response Body: %v\n Other Info:%v\n"+
+		"\nThanks", errorNotification.Url, errorNotification.RequestType, errorNotification.Error, errorNotification.ResponseBody, errorNotification.OtherInfo)
+
+	mail := mailGunClient.NewMessage("StatusOkNotifier <notify@StatusOk.com>", subject, message, fmt.Sprintf("<%s>", mailgunNotify.Email))
+	_, _, mailgunErr := mailGunClient.Send(mail)
+
+	if mailgunErr != nil {
+		return mailgunErr
+	}
 
 	return nil
 }

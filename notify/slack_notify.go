@@ -26,6 +26,10 @@ type postMessage struct {
 	Icon_url string `json:"icon_url"`
 }
 
+func (slackNotify SlackNotify) GetClientName() string {
+	return "Slack"
+}
+
 func (slackNotify SlackNotify) Initialize() error {
 
 	if len(strings.TrimSpace(slackNotify.Username)) == 0 {
@@ -39,8 +43,12 @@ func (slackNotify SlackNotify) Initialize() error {
 	return nil
 }
 
-func (slackNotify SlackNotify) SendNotification(message Notification) error {
-	fmt.Println("slack notify called")
+func (slackNotify SlackNotify) SendResponseTimeNotification(responseTimeNotification ResponseTimeNotification) error {
+
+	message := fmt.Sprintf("Notifiaction From StatusOk\nOne of your apis response time is below than expected."+
+		"\nPlease find the Details below"+
+		"\nUrl: %v \nRequestType: %v \nCurrent Average Response Time: %v \n Expected Response Time: %v\n"+
+		"\nThanks", responseTimeNotification.Url, responseTimeNotification.RequestType, responseTimeNotification.MeanResponseTime, responseTimeNotification.ExpectedResponsetime)
 
 	payload, jsonErr := slackNotify.getJsonParamBody(message)
 
@@ -63,11 +71,39 @@ func (slackNotify SlackNotify) SendNotification(message Notification) error {
 	return nil
 }
 
-func (slackNotify SlackNotify) getJsonParamBody(message Notification) (io.Reader, error) {
+func (slackNotify SlackNotify) SendErrorNotification(errorNotification ErrorNotification) error {
+	//TODO: move this to util class or make local functions in all notifers
+	message := fmt.Sprintf("Notifiaction From StatusOk\nWe are getting error when we try to send request to one of your apis"+
+		"\nPlease find the Details below"+
+		"\nUrl: %v \nRequestType: %v \nError Message: %v \n Response Body: %v\n Other Info:%v\n"+
+		"\nThanks", errorNotification.Url, errorNotification.RequestType, errorNotification.Error, errorNotification.ResponseBody, errorNotification.OtherInfo)
+
+	payload, jsonErr := slackNotify.getJsonParamBody(message)
+
+	if jsonErr != nil {
+		return jsonErr
+	}
+
+	getResponse, respErr := http.Post(slackNotify.ChannelWebhookURL, "application/json", payload)
+
+	if respErr != nil {
+		return respErr
+	}
+
+	defer getResponse.Body.Close()
+
+	if getResponse.StatusCode != http.StatusOK {
+		return errors.New("Slack : Send notifaction failed. Response code " + strconv.Itoa(getResponse.StatusCode))
+	}
+
+	return nil
+}
+
+func (slackNotify SlackNotify) getJsonParamBody(message string) (io.Reader, error) {
 
 	data, jsonErr := json.Marshal(postMessage{slackNotify.ChannelName,
 		slackNotify.Username,
-		message.Message,
+		message,
 		slackNotify.IconUrl,
 	})
 
