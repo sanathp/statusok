@@ -79,10 +79,13 @@ func AddNew(databaseTypes DatabaseTypes) {
 	for i := 0; i < v.NumField(); i++ {
 		dbString := fmt.Sprint(v.Field(i).Interface().(Database))
 		//Check whether notify object is empty . if its not empty add to the list
-		dbString = strings.Replace(dbString, " ", "", -1)
-		if len(dbString) > 2 {
+		if !isEmptyObject(dbString) {
 			dbList = append(dbList, v.Field(i).Interface().(Database))
 		}
+	}
+
+	if len(dbList) != 0 {
+		println("Intializing Database....")
 	}
 
 	for _, value := range dbList {
@@ -137,13 +140,12 @@ func AddRequestInfo(requestInfo RequestInfo) {
 	mean, meanErr := getMeanResponseTimeOfUrl(requestInfo.Url)
 	if meanErr == nil {
 		if mean > urlResponseTimes[requestInfo.Url] {
-			//TODO: when to send notification again ?
-			//Option 1 : clear the queue .but if queue length one , notification will be received every time
-			//Any other better options ?
 			clearQueue(requestInfo.Url)
-			notify.SendResponseTimeNotification(notify.ResponseTypeNotification{
+			//TODO :error retry  exponential?
+			notify.SendResponseTimeNotification(notify.ResponseTimeNotification{
 				requestInfo.Url,
 				requestInfo.RequestType,
+				requestInfo.ResponseTime,
 				mean})
 		}
 	}
@@ -153,8 +155,14 @@ func AddRequestInfo(requestInfo RequestInfo) {
 }
 
 func AddErrorInfo(errorInfo ErrorInfo) {
-	//Insert to all databses
-	//fmt.Println("Got Error info ", errorInfo.Url, " ", errorInfo.Reason, " ", errorInfo.OtherInfo)
+	//TODO :error retry  exponential?
+	notify.SendErrorNotification(notify.ErrorNotification{
+		errorInfo.Url,
+		errorInfo.RequestType,
+		errorInfo.ResponseBody,
+		errorInfo.Reason.Error(),
+		errorInfo.OtherInfo})
+
 	for _, db := range dbList {
 		go db.AddErrorInfo(errorInfo)
 	}
@@ -194,4 +202,17 @@ func getMeanResponseTimeOfUrl(url string) (int64, error) {
 
 func clearQueue(url string) {
 	responseMean[url] = make([]int64, 0)
+}
+
+//TODO: add to util class
+func isEmptyObject(objectString string) bool {
+	objectString = strings.Replace(objectString, "map", "", -1)
+	objectString = strings.Replace(objectString, "[]", "", -1)
+	objectString = strings.Replace(objectString, " ", "", -1)
+
+	if len(objectString) > 2 {
+		return false
+	} else {
+		return true
+	}
 }
