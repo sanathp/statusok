@@ -232,11 +232,11 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 	elapsed := time.Since(start)
 	//Request succesfull . Add infomartion to Database
 	go database.AddRequestInfo(database.RequestInfo{
-		Url:          requestConfig.Url,
-		RequestType:  requestConfig.RequestType,
-		ResponseCode: getResponse.StatusCode,
-		ResponseTime: elapsed.Nanoseconds() / 1000000,
-		ExpectedResponseTime:
+		Url:                  requestConfig.Url,
+		RequestType:          requestConfig.RequestType,
+		ResponseCode:         getResponse.StatusCode,
+		ResponseTime:         elapsed.Nanoseconds() / 1000000,
+		ExpectedResponseTime: requestConfig.ResponseTime,
 	})
 
 	return nil

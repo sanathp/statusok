@@ -28,10 +28,11 @@ var (
 )
 
 type RequestInfo struct {
-	Url          string
-	RequestType  string
-	ResponseCode int
-	ResponseTime int64
+	Url                  string
+	RequestType          string
+	ResponseCode         int
+	ResponseTime         int64
+	ExpectedResponseTime int64
 }
 
 type ErrorInfo struct {
@@ -114,7 +115,7 @@ func addTestErrorAndRequestInfo() {
 
 	println("Adding Test data to your database ....")
 
-	requestInfo := RequestInfo{"http://test.com", "GET", 0, 0}
+	requestInfo := RequestInfo{"http://test.com", "GET", 0, 0, 0}
 
 	errorInfo := ErrorInfo{"http://test.com", "GET", 0, "test response", errors.New("test error"), "test other info"}
 
