@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -45,10 +44,7 @@ func (slackNotify SlackNotify) Initialize() error {
 
 func (slackNotify SlackNotify) SendResponseTimeNotification(responseTimeNotification ResponseTimeNotification) error {
 
-	message := fmt.Sprintf("Notifiaction From StatusOk\nOne of your apis response time is below than expected."+
-		"\nPlease find the Details below"+
-		"\nUrl: %v \nRequestType: %v \nCurrent Average Response Time: %v \n Expected Response Time: %v\n"+
-		"\nThanks", responseTimeNotification.Url, responseTimeNotification.RequestType, responseTimeNotification.MeanResponseTime, responseTimeNotification.ExpectedResponsetime)
+	message := getMessageFromResponseTimeNotification(responseTimeNotification)
 
 	payload, jsonErr := slackNotify.getJsonParamBody(message)
 
@@ -72,11 +68,8 @@ func (slackNotify SlackNotify) SendResponseTimeNotification(responseTimeNotifica
 }
 
 func (slackNotify SlackNotify) SendErrorNotification(errorNotification ErrorNotification) error {
-	//TODO: move this to util class or make local functions in all notifers
-	message := fmt.Sprintf("Notifiaction From StatusOk\nWe are getting error when we try to send request to one of your apis"+
-		"\nPlease find the Details below"+
-		"\nUrl: %v \nRequestType: %v \nError Message: %v \n Response Body: %v\n Other Info:%v\n"+
-		"\nThanks", errorNotification.Url, errorNotification.RequestType, errorNotification.Error, errorNotification.ResponseBody, errorNotification.OtherInfo)
+
+	message := getMessageFromErrorNotification(errorNotification)
 
 	payload, jsonErr := slackNotify.getJsonParamBody(message)
 

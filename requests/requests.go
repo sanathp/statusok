@@ -79,8 +79,10 @@ func RequestsInit(data []RequestConfig, concurrency int) {
 }
 
 func StartMonitoring() {
-	fmt.Println("Number of requests = ", len(RequestsList))
+	fmt.Println("\nStarted Monitoring all ", len(RequestsList), " apis .....")
+
 	go listenToRequestChannel()
+
 	for _, requestConfig := range RequestsList {
 		go createTicker(requestConfig)
 	}
@@ -118,7 +120,7 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 			<-throttle
 		}
 	}()
-	fmt.Println("PerformRequest ", requestConfig.Url)
+
 	var request *http.Request
 	var reqErr error
 
@@ -234,6 +236,7 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 		RequestType:  requestConfig.RequestType,
 		ResponseCode: getResponse.StatusCode,
 		ResponseTime: elapsed.Nanoseconds() / 1000000,
+		ExpectedResponseTime:
 	})
 
 	return nil

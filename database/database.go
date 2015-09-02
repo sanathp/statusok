@@ -187,14 +187,12 @@ func getMeanResponseTimeOfUrl(url string) (int64, error) {
 
 	if len(queue) < MeanResponseCount {
 		return 0, errors.New("Stil the count has not been reached")
-
 	}
 
 	var sum int64
 
 	for _, val := range queue {
 		sum = sum + val
-		fmt.Println("cuurent queue ", val)
 	}
 
 	return sum / int64(MeanResponseCount), nil
@@ -204,7 +202,6 @@ func clearQueue(url string) {
 	responseMean[url] = make([]int64, 0)
 }
 
-//TODO: add to util class
 func isEmptyObject(objectString string) bool {
 	objectString = strings.Replace(objectString, "map", "", -1)
 	objectString = strings.Replace(objectString, "[]", "", -1)

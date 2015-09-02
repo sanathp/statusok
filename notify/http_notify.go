@@ -39,12 +39,9 @@ func (httpNotify HttpNotify) Initialize() error {
 func (httpNotify HttpNotify) SendResponseTimeNotification(responseTimeNotification ResponseTimeNotification) error {
 	var request *http.Request
 	var reqErr error
-	message := fmt.Sprintf("Notifiaction From StatusOk\nOne of your apis response time is below than expected."+
-		"\nPlease find the Details below"+
-		"\nUrl: %v \nRequestType: %v \nCurrent Average Response Time: %v \n Expected Response Time: %v\n"+
-		"\nThanks", responseTimeNotification.Url, responseTimeNotification.RequestType, responseTimeNotification.MeanResponseTime, responseTimeNotification.ExpectedResponsetime)
 
-	msgParam := MessageParam{message}
+	msgParam := MessageParam{getMessageFromResponseTimeNotification(responseTimeNotification)}
+
 	if httpNotify.Headers[ContentType] == JsonContentType {
 
 		jsonBody, jsonErr := GetJsonParamsBody(msgParam)
@@ -100,12 +97,9 @@ func (httpNotify HttpNotify) SendResponseTimeNotification(responseTimeNotificati
 func (httpNotify HttpNotify) SendErrorNotification(errorNotification ErrorNotification) error {
 	var request *http.Request
 	var reqErr error
-	message := fmt.Sprintf("Notifiaction From StatusOk\nWe are getting error when we try to send request to one of your apis"+
-		"\nPlease find the Details below"+
-		"\nUrl: %v \nRequestType: %v \nError Message: %v \n Response Body: %v\n Other Info:%v\n"+
-		"\nThanks", errorNotification.Url, errorNotification.RequestType, errorNotification.Error, errorNotification.ResponseBody, errorNotification.OtherInfo)
 
-	msgParam := MessageParam{message}
+	msgParam := MessageParam{getMessageFromErrorNotification(errorNotification)}
+
 	if httpNotify.Headers[ContentType] == JsonContentType {
 
 		jsonBody, jsonErr := GetJsonParamsBody(msgParam)

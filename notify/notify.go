@@ -8,11 +8,12 @@ import (
 	"strings"
 )
 
-//TODO: noftication using smtp request https://github.com/zbindenren/logrus_mail/blob/master/mail.go . testp with your gmail
 type NotificationTypes struct {
-	Mailgun MailgunNotify `json:"mailGun"`
-	Slack   SlackNotify   `json:"slack"`
-	Http    HttpNotify    `json:"httpEndPoint"`
+	//TODO:test mail notify
+	MailNotify MailNotify    `json:"mail"`
+	Mailgun    MailgunNotify `json:"mailGun"`
+	Slack      SlackNotify   `json:"slack"`
+	Http       HttpNotify    `json:"httpEndPoint"`
 }
 
 type ResponseTimeNotification struct {
@@ -130,6 +131,7 @@ func validateEmail(email string) bool {
 }
 
 func isEmptyObject(objectString string) bool {
+	objectString = strings.Replace(objectString, "0", "", -1)
 	objectString = strings.Replace(objectString, "map", "", -1)
 	objectString = strings.Replace(objectString, "[]", "", -1)
 	objectString = strings.Replace(objectString, " ", "", -1)
@@ -139,4 +141,24 @@ func isEmptyObject(objectString string) bool {
 	} else {
 		return true
 	}
+}
+
+func getMessageFromResponseTimeNotification(responseTimeNotification ResponseTimeNotification) string {
+
+	message := fmt.Sprintf("Notifiaction From StatusOk\n\nOne of your apis response time is below than expected."+
+		"\n\nPlease find the Details below"+
+		"\n\nUrl: %v \nRequestType: %v \nCurrent Average Response Time: %v ms\nExpected Response Time: %v ms\n"+
+		"\n\nThanks", responseTimeNotification.Url, responseTimeNotification.RequestType, responseTimeNotification.MeanResponseTime, responseTimeNotification.ExpectedResponsetime)
+
+	return message
+}
+
+func getMessageFromErrorNotification(errorNotification ErrorNotification) string {
+
+	message := fmt.Sprintf("Notifiaction From StatusOk\n\nWe are getting error when we try to send request to one of your apis"+
+		"\n\nPlease find the Details below"+
+		"\n\nUrl: %v \nRequestType: %v \nError Message: %v \nResponse Body: %v\nOther Info:%v\n"+
+		"\n\nThanks", errorNotification.Url, errorNotification.RequestType, errorNotification.Error, errorNotification.ResponseBody, errorNotification.OtherInfo)
+
+	return message
 }
