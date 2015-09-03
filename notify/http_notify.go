@@ -53,13 +53,13 @@ func (httpNotify HttpNotify) SendResponseTimeNotification(responseTimeNotificati
 			jsonBody)
 
 	} else if httpNotify.Headers[ContentType] == FormContentType {
-		urlParams := GetUrlParams(msgParam)
+		urlParams := GetUrlValues(msgParam)
 		request, reqErr = http.NewRequest(httpNotify.RequestType,
 			httpNotify.Url,
 			bytes.NewBufferString(urlParams.Encode()))
 		request.Header.Add(ContentLength, strconv.Itoa(len(urlParams.Encode())))
 	} else {
-		urlParams := GetUrlParams(msgParam)
+		urlParams := GetUrlValues(msgParam)
 		request, reqErr = http.NewRequest(httpNotify.RequestType,
 			httpNotify.Url,
 			bytes.NewBufferString(urlParams.Encode()))
@@ -69,7 +69,6 @@ func (httpNotify HttpNotify) SendResponseTimeNotification(responseTimeNotificati
 	}
 
 	if reqErr != nil {
-		fmt.Println(reqErr)
 		return reqErr
 	}
 
@@ -80,7 +79,6 @@ func (httpNotify HttpNotify) SendResponseTimeNotification(responseTimeNotificati
 	getResponse, respErr := client.Do(request)
 
 	if respErr != nil {
-		fmt.Println(respErr, httpNotify)
 		return respErr
 	}
 
@@ -111,13 +109,13 @@ func (httpNotify HttpNotify) SendErrorNotification(errorNotification ErrorNotifi
 			jsonBody)
 
 	} else if httpNotify.Headers[ContentType] == FormContentType {
-		urlParams := GetUrlParams(msgParam)
+		urlParams := GetUrlValues(msgParam)
 		request, reqErr = http.NewRequest(httpNotify.RequestType,
 			httpNotify.Url,
 			bytes.NewBufferString(urlParams.Encode()))
 		request.Header.Add(ContentLength, strconv.Itoa(len(urlParams.Encode())))
 	} else {
-		urlParams := GetUrlParams(msgParam)
+		urlParams := GetUrlValues(msgParam)
 		request, reqErr = http.NewRequest(httpNotify.RequestType,
 			httpNotify.Url,
 			bytes.NewBufferString(urlParams.Encode()))
@@ -157,7 +155,7 @@ func AddHeaders(req *http.Request, headers map[string]string) {
 	}
 }
 
-func GetUrlParams(msgParam MessageParam) url.Values {
+func GetUrlValues(msgParam MessageParam) url.Values {
 	urlParams := url.Values{}
 	urlParams.Set("message", msgParam.Message)
 	return urlParams
@@ -175,4 +173,10 @@ func GetJsonParamsBody(msgParam MessageParam) (io.Reader, error) {
 	}
 
 	return bytes.NewBuffer(data), nil
+}
+
+func getStringFromResponseBody(body io.ReadCloser) string {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(body)
+	return buf.String()
 }

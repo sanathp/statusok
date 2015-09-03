@@ -8,9 +8,11 @@ import (
 	"github.com/sanathp/StatusOk/notify"
 	"github.com/sanathp/StatusOk/requests"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 type configParser struct {
@@ -89,16 +91,12 @@ func startServer(fileName string) {
 	notify.SendTestNotification()
 
 	//Initialze urls map for monitoring
-	urls := make(map[string]int64)
-
-	for _, value := range config.Requests {
-		urls[value.Url] = value.ResponseTime
-	}
+	reqs, ids := createIdsForRequests(config.Requests)
 
 	database.AddNew(config.Database)
-	database.Initialize(urls, config.NotifyWhen.MeanResponseCount, config.NotifyWhen.ErrorCount)
+	database.Initialize(ids, config.NotifyWhen.MeanResponseCount, config.NotifyWhen.ErrorCount)
 
-	requests.RequestsInit(config.Requests, config.Concurrency)
+	requests.RequestsInit(reqs, config.Concurrency)
 	requests.StartMonitoring()
 
 	//Tells whether Status Handler is running or not
@@ -123,4 +121,20 @@ func fileExists(name string) bool {
 		}
 	}
 	return true
+}
+
+func createIdsForRequests(reqs []requests.RequestConfig) ([]requests.RequestConfig, map[int]int64) {
+	source := rand.NewSource(time.Now().UnixNano())
+	random := rand.New(source)
+	ids := make(map[int]int64, 0)
+	newreqs := make([]requests.RequestConfig, 0)
+
+	for _, requestConfig := range reqs {
+		randInt := random.Intn(1000000)
+		ids[randInt] = requestConfig.ResponseTime
+		requestConfig.Id = randInt
+		newreqs = append(newreqs, requestConfig)
+	}
+
+	return newreqs, ids
 }

@@ -15,6 +15,7 @@ import (
 )
 
 //TODO: increase menory efficiency by using pointers ?
+//TODO: use https://github.com/parnurzeal/gorequest ?
 var (
 	RequestsList   []RequestConfig
 	requestChannel chan RequestConfig
@@ -29,10 +30,12 @@ const (
 )
 
 type RequestConfig struct {
+	Id           int
 	Url          string            `json:"url"`
 	RequestType  string            `json:"requestType"`
 	Headers      map[string]string `json:"headers"`
-	FormParams   map[string]string `json:"params"` //Todo SHould be interface ?
+	FormParams   map[string]string `json:"formParams"`
+	UrlParams    map[string]string `json:"urlParams"`
 	ResponseCode int               `json:"responseCode"`
 	ResponseTime int64             `json:"responseTime"`
 	CheckEvery   time.Duration     `json:"checkEvery"`
@@ -60,6 +63,11 @@ func RequestsInit(data []RequestConfig, concurrency int) {
 	println("Api Count: ", len(data))
 	for i, requestConfig := range data {
 		println("Request #", i, " : ", requestConfig.RequestType, " ", requestConfig.Url)
+
+		_, urlErr := url.Parse(requestConfig.Url)
+		if urlErr != nil {
+			println("Invalid Url ", requestConfig.Url, " given for Request #", i, " Please verify your config file")
+		}
 
 		reqErr := PerformRequest(requestConfig, nil)
 
@@ -128,12 +136,14 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 		request, reqErr = http.NewRequest(requestConfig.RequestType,
 			requestConfig.Url,
 			nil)
+
 	} else {
 		if requestConfig.Headers[ContentType] == JsonContentType {
 			jsonBody, jsonErr := GetJsonParamsBody(requestConfig.FormParams)
 			if jsonErr != nil {
 				//Not able to create Request object.Add Error to Database
 				go database.AddErrorInfo(database.ErrorInfo{
+					Id:           requestConfig.Id,
 					Url:          requestConfig.Url,
 					RequestType:  requestConfig.RequestType,
 					ResponseCode: 0,
@@ -148,26 +158,26 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 				requestConfig.Url,
 				jsonBody)
 
-		} else if requestConfig.Headers[ContentType] == FormContentType {
-			urlParams := GetUrlParams(requestConfig.FormParams)
-			request, reqErr = http.NewRequest(requestConfig.RequestType,
-				requestConfig.Url,
-				bytes.NewBufferString(urlParams.Encode()))
-			request.Header.Add(ContentLength, strconv.Itoa(len(urlParams.Encode())))
 		} else {
-			urlParams := GetUrlParams(requestConfig.FormParams)
+
+			formParams := GetUrlValues(requestConfig.FormParams)
 			request, reqErr = http.NewRequest(requestConfig.RequestType,
 				requestConfig.Url,
-				bytes.NewBufferString(urlParams.Encode()))
+				bytes.NewBufferString(formParams.Encode()))
+			request.Header.Add(ContentLength, strconv.Itoa(len(formParams.Encode())))
 
-			request.Header.Add(ContentType, FormContentType)
-			request.Header.Add(ContentLength, strconv.Itoa(len(urlParams.Encode())))
+			if requestConfig.Headers[ContentType] != "" {
+				//Add content type to header if user doesnt mention it config file
+				//Default content type application/x-www-form-urlencoded
+				request.Header.Add(ContentType, FormContentType)
+			}
 		}
 	}
 
 	if reqErr != nil {
 		//Not able to create Request object.Add Error to Database
 		go database.AddErrorInfo(database.ErrorInfo{
+			Id:           requestConfig.Id,
 			Url:          requestConfig.Url,
 			RequestType:  requestConfig.RequestType,
 			ResponseCode: 0,
@@ -177,6 +187,11 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 		})
 
 		return reqErr
+	}
+
+	if len(requestConfig.UrlParams) != 0 {
+		urlParams := GetUrlValues(requestConfig.UrlParams)
+		request.URL.RawQuery = urlParams.Encode()
 	}
 
 	AddHeaders(request, requestConfig.Headers)
@@ -204,6 +219,7 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 			statusCode = getResponse.StatusCode
 		}
 		go database.AddErrorInfo(database.ErrorInfo{
+			Id:           requestConfig.Id,
 			Url:          requestConfig.Url,
 			RequestType:  requestConfig.RequestType,
 			ResponseCode: statusCode,
@@ -215,23 +231,26 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 	}
 
 	defer getResponse.Body.Close()
+	fmt.Println(convertResponseToString(getResponse))
 
 	if getResponse.StatusCode != requestConfig.ResponseCode {
 		//Response code is not the expected one .Add Error to database
 		go database.AddErrorInfo(database.ErrorInfo{
+			Id:           requestConfig.Id,
 			Url:          requestConfig.Url,
 			RequestType:  requestConfig.RequestType,
 			ResponseCode: getResponse.StatusCode,
 			ResponseBody: convertResponseToString(getResponse),
-			Reason:       database.ErrResposeCode,
+			Reason:       errResposeCode(getResponse.StatusCode, requestConfig.ResponseCode),
 			OtherInfo:    "",
 		})
-		return database.ErrResposeCode
+		return errResposeCode(getResponse.StatusCode, requestConfig.ResponseCode)
 	}
 
 	elapsed := time.Since(start)
 	//Request succesfull . Add infomartion to Database
 	go database.AddRequestInfo(database.RequestInfo{
+		Id:                   requestConfig.Id,
 		Url:                  requestConfig.Url,
 		RequestType:          requestConfig.RequestType,
 		ResponseCode:         getResponse.StatusCode,
@@ -263,7 +282,7 @@ func AddHeaders(req *http.Request, headers map[string]string) {
 	}
 }
 
-func GetUrlParams(params map[string]string) url.Values {
+func GetUrlValues(params map[string]string) url.Values {
 	urlParams := url.Values{}
 	i := 0
 	for key, value := range params {
@@ -289,4 +308,8 @@ func GetJsonParamsBody(params map[string]string) (io.Reader, error) {
 	}
 
 	return bytes.NewBuffer(data), nil
+}
+
+func errResposeCode(status int, expectedStatus int) error {
+	return errors.New(fmt.Sprintf("Got Response code %v .Expeceted Response Code %v ", status, expectedStatus))
 }

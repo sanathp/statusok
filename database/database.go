@@ -23,11 +23,11 @@ var (
 	ErrCreateRequest = errors.New("Invalid Request Config.Not able to create request")
 	ErrDoRequest     = errors.New("Request failed")
 
-	urlResponseTimes map[string]int64
-	responseMean     map[string][]int64
+	responseMean map[int][]int64
 )
 
 type RequestInfo struct {
+	Id                   int
 	Url                  string
 	RequestType          string
 	ResponseCode         int
@@ -36,6 +36,7 @@ type RequestInfo struct {
 }
 
 type ErrorInfo struct {
+	Id           int
 	Url          string
 	RequestType  string
 	ResponseCode int
@@ -55,7 +56,7 @@ type DatabaseTypes struct {
 	InfluxDb InfluxDb `json:"influxDb"`
 }
 
-func Initialize(urls map[string]int64, mMeanResponseCount int, mErrorCount int) {
+func Initialize(ids map[int]int64, mMeanResponseCount int, mErrorCount int) {
 
 	if mMeanResponseCount != 0 {
 		MeanResponseCount = mMeanResponseCount
@@ -65,11 +66,11 @@ func Initialize(urls map[string]int64, mMeanResponseCount int, mErrorCount int) 
 		ErrorCount = mErrorCount
 	}
 	//TODO: try to make all slices as pointers
-	responseMean = make(map[string][]int64)
+	responseMean = make(map[int][]int64)
 
-	for url, _ := range urls {
+	for id, _ := range ids {
 		queue := make([]int64, 0)
-		responseMean[url] = queue
+		responseMean[id] = queue
 	}
 }
 
@@ -115,9 +116,9 @@ func addTestErrorAndRequestInfo() {
 
 	println("Adding Test data to your database ....")
 
-	requestInfo := RequestInfo{"http://test.com", "GET", 0, 0, 0}
+	requestInfo := RequestInfo{0, "http://test.com", "GET", 0, 0, 0}
 
-	errorInfo := ErrorInfo{"http://test.com", "GET", 0, "test response", errors.New("test error"), "test other info"}
+	errorInfo := ErrorInfo{0, "http://test.com", "GET", 0, "test response", errors.New("test error"), "test other info"}
 
 	for _, db := range dbList {
 		reqErr := db.AddRequestInfo(requestInfo)
@@ -137,16 +138,16 @@ func addTestErrorAndRequestInfo() {
 func AddRequestInfo(requestInfo RequestInfo) {
 	//fmt.Println("Got Reqest info ", requestInfo.Url, " ", requestInfo.ResponseTime)
 	//Insert to all databses
-	addResponseTimeToUrl(requestInfo.Url, requestInfo.ResponseTime)
-	mean, meanErr := getMeanResponseTimeOfUrl(requestInfo.Url)
+	addResponseTimeToRequest(requestInfo.Id, requestInfo.ResponseTime)
+	mean, meanErr := getMeanResponseTimeOfUrl(requestInfo.Id)
 	if meanErr == nil {
-		if mean > urlResponseTimes[requestInfo.Url] {
-			clearQueue(requestInfo.Url)
+		if mean > requestInfo.ExpectedResponseTime {
+			clearQueue(requestInfo.Id)
 			//TODO :error retry  exponential?
 			notify.SendResponseTimeNotification(notify.ResponseTimeNotification{
 				requestInfo.Url,
 				requestInfo.RequestType,
-				requestInfo.ResponseTime,
+				requestInfo.ExpectedResponseTime,
 				mean})
 		}
 	}
@@ -157,6 +158,7 @@ func AddRequestInfo(requestInfo RequestInfo) {
 
 func AddErrorInfo(errorInfo ErrorInfo) {
 	//TODO :error retry  exponential?
+	fmt.Println(errorInfo.Reason.Error(), " ", errorInfo.OtherInfo)
 	notify.SendErrorNotification(notify.ErrorNotification{
 		errorInfo.Url,
 		errorInfo.RequestType,
@@ -169,8 +171,8 @@ func AddErrorInfo(errorInfo ErrorInfo) {
 	}
 }
 
-func addResponseTimeToUrl(url string, responseTime int64) {
-	queue := responseMean[url]
+func addResponseTimeToRequest(id int, responseTime int64) {
+	queue := responseMean[id]
 
 	if len(queue) == MeanResponseCount {
 		queue = queue[1:]
@@ -179,12 +181,12 @@ func addResponseTimeToUrl(url string, responseTime int64) {
 		queue = append(queue, responseTime)
 	}
 
-	responseMean[url] = queue
+	responseMean[id] = queue
 }
 
-func getMeanResponseTimeOfUrl(url string) (int64, error) {
+func getMeanResponseTimeOfUrl(id int) (int64, error) {
 
-	queue := responseMean[url]
+	queue := responseMean[id]
 
 	if len(queue) < MeanResponseCount {
 		return 0, errors.New("Stil the count has not been reached")
@@ -199,8 +201,8 @@ func getMeanResponseTimeOfUrl(url string) (int64, error) {
 	return sum / int64(MeanResponseCount), nil
 }
 
-func clearQueue(url string) {
-	responseMean[url] = make([]int64, 0)
+func clearQueue(id int) {
+	responseMean[id] = make([]int64, 0)
 }
 
 func isEmptyObject(objectString string) bool {

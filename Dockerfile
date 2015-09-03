@@ -23,12 +23,9 @@ RUN apt-get install -y adduser libfontconfig
 RUN dpkg -i grafana_2.1.3_amd64.deb
 RUN service grafana-server start
 
+#how to connect to localhost inside ?? http://stackoverflow.com/questions/24319662/from-inside-of-a-docker-container-how-do-i-connect-to-the-localhost-of-the-mach
 
-ENTRYPOINT /bin/bash
-
-
-# Run the outyet command by default when the container starts.
-#ENTRYPOINT /go/bin/StatusOk --config /go/src/github.com/sanathp/StatusOk/config.json
+ENTRYPOINT /go/bin/StatusOk --config /go/src/github.com/sanathp/StatusOk/config.json
 
 # Document that the service listens 
 EXPOSE 80 8083 8086 7321 3000
