@@ -38,8 +38,6 @@ func (mailgunNotify MailgunNotify) Initialize() error {
 	}
 
 	mailGunClient = mailgun.NewMailgun(mailgunNotify.Domain, mailgunNotify.ApiKey, mailgunNotify.PublicApiKey)
-	//Send Test Email ?
-	//Check response
 
 	return nil
 }

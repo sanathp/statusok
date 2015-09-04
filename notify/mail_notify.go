@@ -1,9 +1,6 @@
 package notify
 
 //Inspired from https://github.com/zbindenren/logrus_mail
-//TODO:move to https://github.com/go-gomail/gomail ?
-//TODO:mention this in your read me for gmail https://www.google.com/settings/security/lesssecureapps
-//http://stackoverflow.com/questions/20337040/gmail-smtp-debug-error-please-log-in-via-your-web-browser
 import (
 	"bytes"
 	"fmt"

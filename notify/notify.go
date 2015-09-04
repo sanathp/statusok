@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
+//Diffrent types of clients to deliver notifications
 type NotificationTypes struct {
-	//TODO:test mail notify
 	MailNotify MailNotify    `json:"mail"`
 	Mailgun    MailgunNotify `json:"mailGun"`
 	Slack      SlackNotify   `json:"slack"`
@@ -43,6 +43,7 @@ type Notify interface {
 	SendErrorNotification(notification ErrorNotification) error
 }
 
+//Add notification clients given by user in config file to notificationsList
 func AddNew(notificationTypes NotificationTypes) {
 
 	v := reflect.ValueOf(notificationTypes)
@@ -74,6 +75,7 @@ func AddNew(notificationTypes NotificationTypes) {
 	}
 }
 
+//Send response time notification to all clients registered
 func SendResponseTimeNotification(responseTimeNotification ResponseTimeNotification) {
 
 	for _, value := range notificationsList {
@@ -86,6 +88,7 @@ func SendResponseTimeNotification(responseTimeNotification ResponseTimeNotificat
 	}
 }
 
+//Send Error notification to all clients registered
 func SendErrorNotification(errorNotification ErrorNotification) {
 
 	for _, value := range notificationsList {
@@ -98,6 +101,7 @@ func SendErrorNotification(errorNotification ErrorNotification) {
 	}
 }
 
+//Send Test notification to all registered clients .To make sure everything is working
 func SendTestNotification() {
 
 	println("Sending Test notifications to the registered clients")
@@ -143,6 +147,7 @@ func isEmptyObject(objectString string) bool {
 	}
 }
 
+//A readable message string from responseTimeNotification
 func getMessageFromResponseTimeNotification(responseTimeNotification ResponseTimeNotification) string {
 
 	message := fmt.Sprintf("Notifiaction From StatusOk\n\nOne of your apis response time is below than expected."+
@@ -153,6 +158,7 @@ func getMessageFromResponseTimeNotification(responseTimeNotification ResponseTim
 	return message
 }
 
+//A readable message string from errorNotification
 func getMessageFromErrorNotification(errorNotification ErrorNotification) string {
 
 	message := fmt.Sprintf("Notifiaction From StatusOk\n\nWe are getting error when we try to send request to one of your apis"+

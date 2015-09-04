@@ -10,20 +10,19 @@ import (
 	"github.com/sanathp/StatusOk/notify"
 )
 
-const ()
+const (
+	MeanResponseCount = 5 //Default number of response times to calcuate mean response time
+)
 
 var (
-	ErrorCount        = 1 //Default Value
-	MeanResponseCount = 5 //Default value
-	dbMain            Database
-	dbList            []Database
+	dbList       []Database      //list of databases registered
+	responseMean map[int][]int64 //A map of queues to calculate mean response time
+	dbMain       Database
 
 	ErrResposeCode   = errors.New("Response code do not Match")
 	ErrTimeout       = errors.New("Request Time out Error")
 	ErrCreateRequest = errors.New("Invalid Request Config.Not able to create request")
 	ErrDoRequest     = errors.New("Request failed")
-
-	responseMean map[int][]int64
 )
 
 type RequestInfo struct {
@@ -56,6 +55,7 @@ type DatabaseTypes struct {
 	InfluxDb InfluxDb `json:"influxDb"`
 }
 
+//Intialize responseMean app and counts
 func Initialize(ids map[int]int64, mMeanResponseCount int, mErrorCount int) {
 
 	if mMeanResponseCount != 0 {
@@ -74,6 +74,7 @@ func Initialize(ids map[int]int64, mMeanResponseCount int, mErrorCount int) {
 	}
 }
 
+//Add database to the database List
 func AddNew(databaseTypes DatabaseTypes) {
 
 	v := reflect.ValueOf(databaseTypes)
@@ -90,6 +91,7 @@ func AddNew(databaseTypes DatabaseTypes) {
 		println("Intializing Database....")
 	}
 
+	//Intialize all databases given by user by calling the initialize method
 	for _, value := range dbList {
 
 		initErr := value.Initialize()
@@ -101,17 +103,16 @@ func AddNew(databaseTypes DatabaseTypes) {
 
 	}
 
-	//Set first database as primary database for monitoring
-	//TODO: mention this in guide
+	//Set first database as primary database
 	if len(dbList) != 0 {
 		dbMain = dbList[0]
 		addTestErrorAndRequestInfo()
 	} else {
-		//TODO: how to monitor here
 		fmt.Println("No Database selected.")
 	}
 }
 
+//Insert test data to database
 func addTestErrorAndRequestInfo() {
 
 	println("Adding Test data to your database ....")
@@ -135,10 +136,19 @@ func addTestErrorAndRequestInfo() {
 	}
 }
 
+//This function is called by requests package when request has been successfully performed
+//Request data is inserted to all the registered databases
 func AddRequestInfo(requestInfo RequestInfo) {
-	//fmt.Println("Got Reqest info ", requestInfo.Url, " ", requestInfo.ResponseTime)
+
 	//Insert to all databses
+	for _, db := range dbList {
+		go db.AddRequestInfo(requestInfo)
+	}
+
+	//Response time to queue
 	addResponseTimeToRequest(requestInfo.Id, requestInfo.ResponseTime)
+
+	//calculate current mean response time . if its less than expected send notitifcation
 	mean, meanErr := getMeanResponseTimeOfUrl(requestInfo.Id)
 	if meanErr == nil {
 		if mean > requestInfo.ExpectedResponseTime {
@@ -151,14 +161,15 @@ func AddRequestInfo(requestInfo RequestInfo) {
 				mean})
 		}
 	}
-	for _, db := range dbList {
-		go db.AddRequestInfo(requestInfo)
-	}
+
 }
 
+//This function is called by requests package when a reuquest fails
+//Error Information is inserted to all the registered databases
 func AddErrorInfo(errorInfo ErrorInfo) {
+
+	//Request failed send notification
 	//TODO :error retry  exponential?
-	fmt.Println(errorInfo.Reason.Error(), " ", errorInfo.OtherInfo)
 	notify.SendErrorNotification(notify.ErrorNotification{
 		errorInfo.Url,
 		errorInfo.RequestType,
@@ -166,6 +177,7 @@ func AddErrorInfo(errorInfo ErrorInfo) {
 		errorInfo.Reason.Error(),
 		errorInfo.OtherInfo})
 
+	//Add Error information to database
 	for _, db := range dbList {
 		go db.AddErrorInfo(errorInfo)
 	}
@@ -184,6 +196,7 @@ func addResponseTimeToRequest(id int, responseTime int64) {
 	responseMean[id] = queue
 }
 
+//Calculate current  mean response time for the given request id
 func getMeanResponseTimeOfUrl(id int) (int64, error) {
 
 	queue := responseMean[id]
@@ -206,6 +219,7 @@ func clearQueue(id int) {
 }
 
 func isEmptyObject(objectString string) bool {
+
 	objectString = strings.Replace(objectString, "map", "", -1)
 	objectString = strings.Replace(objectString, "[]", "", -1)
 	objectString = strings.Replace(objectString, " ", "", -1)

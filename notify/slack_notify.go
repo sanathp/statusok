@@ -21,7 +21,6 @@ type postMessage struct {
 	Channel  string `json:"channel"`
 	Username string `json:"username"`
 	Text     string `json:"text,omitempty"`
-	//TODO: test if icon url is working
 	Icon_url string `json:"icon_url"`
 }
 
