@@ -68,7 +68,7 @@ func (requestConfig *RequestConfig) Validate() error {
 	}
 
 	if requestConfig.ResponseCode == 0 {
-		requestConfig.ResponseCode = DeafultResponseCode
+		requestConfig.ResponseCode = DefaultResponseCode
 	}
 
 	if requestConfig.CheckEvery == 0 {
@@ -281,7 +281,6 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 	}
 
 	defer getResponse.Body.Close()
-	fmt.Println(convertResponseToString(getResponse))
 
 	if getResponse.StatusCode != requestConfig.ResponseCode {
 		//Response code is not the expected one .Add Error to database

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/influxdb/influxdb/client"
-	"log"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -84,7 +84,7 @@ func (influxDb InfluxDb) AddRequestInfo(requestInfo RequestInfo) error {
 	point := client.Point{
 		Measurement: requestInfo.Url,
 		Tags: map[string]string{
-			"requestId":   errorInfo.Id,
+			"requestId":   strconv.Itoa(requestInfo.Id),
 			"requestType": requestInfo.RequestType,
 		},
 		Fields: map[string]interface{}{
@@ -103,7 +103,7 @@ func (influxDb InfluxDb) AddRequestInfo(requestInfo RequestInfo) error {
 		RetentionPolicy: "default",
 	}
 
-	hi, err := influxDBcon.Write(bps)
+	_, err := influxDBcon.Write(bps)
 
 	if err != nil {
 		return err
@@ -118,7 +118,7 @@ func (influxDb InfluxDb) AddErrorInfo(errorInfo ErrorInfo) error {
 	point := client.Point{
 		Measurement: errorInfo.Url,
 		Tags: map[string]string{
-			"requestId":   errorInfo.Id,
+			"requestId":   strconv.Itoa(errorInfo.Id),
 			"requestType": errorInfo.RequestType,
 			"reason":      errorInfo.Reason.Error(),
 		},

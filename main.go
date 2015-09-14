@@ -42,30 +42,43 @@ func main() {
 			Value: "config.json",
 			Usage: "location of config file",
 		},
+		cli.StringFlag{
+			Name:  "log",
+			Value: "",
+			Usage: "file to save logs",
+		},
 	}
 
 	app.Action = func(c *cli.Context) {
-		if len(c.String("config")) == 0 {
-			println("config.json file not present in current directory . Please give the location of config file using --config parameter")
-		} else {
-			if fileExists(c.String("config")) {
-				println("Opening File :", c.String("config"))
 
-				//Start monitoring when a valid file path is given
-				startMonitoring(c.String("config"))
-			} else {
-				println("Config file not present at the given location: ", c.String("config"), "\nPlease give correct file location using --config parameter")
+		if fileExists(c.String("config")) {
+
+			if len(c.String("log")) != 0 {
+				//log prameter given.Check if file can be created at given path
+
+				if !logFilePathValid(c.String("log")) {
+					println("Invalid File Path given for parameter --log")
+					os.Exit(3)
+				}
 			}
+
+			println("Reading File :", c.String("config"))
+
+			//Start monitoring when a valid file path is given
+			startMonitoring(c.String("config"), c.String("log"))
+		} else {
+			println("Config file not present at the given location: ", c.String("config"), "\nPlease give correct file location using --config parameter")
 		}
+
 	}
 
 	//Run as cli app
 	app.Run(os.Args)
 }
 
-func startMonitoring(fileName string) {
+func startMonitoring(configFileName string, logFileName string) {
 
-	configFile, err := os.Open(fileName)
+	configFile, err := os.Open(configFileName)
 
 	if err != nil {
 		fmt.Println("Error opening config file:\n", err.Error())
@@ -96,6 +109,8 @@ func startMonitoring(fileName string) {
 	requests.RequestsInit(reqs, config.Concurrency)
 	requests.StartMonitoring()
 
+	database.EnableLogging(logFileName)
+
 	//Just to check StatusOk is running or not
 	http.HandleFunc("/", statusHandler)
 
@@ -121,6 +136,16 @@ func fileExists(name string) bool {
 			return false
 		}
 	}
+	return true
+}
+
+func logFilePathValid(name string) bool {
+	f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	defer f.Close()
+	if err != nil {
+		return false
+	}
+
 	return true
 }
 

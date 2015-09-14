@@ -7,14 +7,14 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/sanathp/StatusOk/notify"
 )
 
-const (
-	MeanResponseCount = 5 //Default number of response times to calcuate mean response time
-)
-
 var (
+	MeanResponseCount = 5 //Default number of response times to calcuate mean response time
+	ErrorCount        = 1 //Default number of errors should occur to send notification
+
 	dbList       []Database      //list of databases registered
 	responseMean map[int][]int64 //A map of queues to calculate mean response time
 	dbMain       Database
@@ -23,6 +23,8 @@ var (
 	ErrTimeout       = errors.New("Request Time out Error")
 	ErrCreateRequest = errors.New("Invalid Request Config.Not able to create request")
 	ErrDoRequest     = errors.New("Request failed")
+
+	isLoggingEnabled = false //default
 )
 
 type RequestInfo struct {
@@ -72,6 +74,7 @@ func Initialize(ids map[int]int64, mMeanResponseCount int, mErrorCount int) {
 		queue := make([]int64, 0)
 		responseMean[id] = queue
 	}
+
 }
 
 //Add database to the database List
@@ -139,6 +142,7 @@ func addTestErrorAndRequestInfo() {
 //This function is called by requests package when request has been successfully performed
 //Request data is inserted to all the registered databases
 func AddRequestInfo(requestInfo RequestInfo) {
+	logRequestInfo(requestInfo)
 
 	//Insert to all databses
 	for _, db := range dbList {
@@ -167,6 +171,7 @@ func AddRequestInfo(requestInfo RequestInfo) {
 //This function is called by requests package when a reuquest fails
 //Error Information is inserted to all the registered databases
 func AddErrorInfo(errorInfo ErrorInfo) {
+	logErrorInfo(errorInfo)
 
 	//Request failed send notification
 	//TODO :error retry  exponential?
@@ -228,5 +233,58 @@ func isEmptyObject(objectString string) bool {
 		return false
 	} else {
 		return true
+	}
+}
+
+func EnableLogging(fileName string) {
+
+	isLoggingEnabled = true
+
+	// Log as JSON instead of the default ASCII formatter.
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+
+	if len(fileName) == 0 {
+		// Output to stderr instead of stdout, could also be a file.
+		logrus.SetOutput(os.Stderr)
+	} else {
+		f, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+
+		if err != nil {
+			println("Invalid File Path given for parameter --log")
+			os.Exit(3)
+		}
+
+		logrus.SetOutput(f)
+	}
+
+}
+
+func logErrorInfo(errorInfo ErrorInfo) {
+
+	if isLoggingEnabled {
+		logrus.WithFields(logrus.Fields{
+			"id":           errorInfo.Id,
+			"url":          errorInfo.Url,
+			"requestType":  errorInfo.RequestType,
+			"responseCode": errorInfo.ResponseCode,
+			"responseBody": errorInfo.ResponseBody,
+			"reason":       errorInfo.Reason.Error(),
+			"otherInfo":    errorInfo.Reason,
+		}).Error("Status Ok Error occurred for url " + errorInfo.Url)
+	}
+
+}
+
+func logRequestInfo(requestInfo RequestInfo) {
+
+	if isLoggingEnabled {
+		logrus.WithFields(logrus.Fields{
+			"id":                   requestInfo.Id,
+			"url":                  requestInfo.Url,
+			"requestType":          requestInfo.RequestType,
+			"responseCode":         requestInfo.ResponseCode,
+			"responseTime":         requestInfo.ResponseTime,
+			"expectedResponseTime": requestInfo.ExpectedResponseTime,
+		}).Info("")
 	}
 }
