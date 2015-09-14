@@ -84,6 +84,7 @@ func AddNew(databaseTypes DatabaseTypes) {
 
 	for i := 0; i < v.NumField(); i++ {
 		dbString := fmt.Sprint(v.Field(i).Interface().(Database))
+
 		//Check whether notify object is empty . if its not empty add to the list
 		if !isEmptyObject(dbString) {
 			dbList = append(dbList, v.Field(i).Interface().(Database))
@@ -154,6 +155,7 @@ func AddRequestInfo(requestInfo RequestInfo) {
 
 	//calculate current mean response time . if its less than expected send notitifcation
 	mean, meanErr := getMeanResponseTimeOfUrl(requestInfo.Id)
+
 	if meanErr == nil {
 		if mean > requestInfo.ExpectedResponseTime {
 			clearQueue(requestInfo.Id)
@@ -225,6 +227,7 @@ func clearQueue(id int) {
 
 func isEmptyObject(objectString string) bool {
 
+	objectString = strings.Replace(objectString, "0", "", -1)
 	objectString = strings.Replace(objectString, "map", "", -1)
 	objectString = strings.Replace(objectString, "[]", "", -1)
 	objectString = strings.Replace(objectString, " ", "", -1)
