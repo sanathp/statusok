@@ -191,16 +191,18 @@ func AddErrorInfo(errorInfo ErrorInfo) {
 }
 
 func addResponseTimeToRequest(id int, responseTime int64) {
-	queue := responseMean[id]
+	if responseMean != nil {
+		queue := responseMean[id]
 
-	if len(queue) == MeanResponseCount {
-		queue = queue[1:]
-		queue = append(queue, responseTime)
-	} else {
-		queue = append(queue, responseTime)
+		if len(queue) == MeanResponseCount {
+			queue = queue[1:]
+			queue = append(queue, responseTime)
+		} else {
+			queue = append(queue, responseTime)
+		}
+
+		responseMean[id] = queue
 	}
-
-	responseMean[id] = queue
 }
 
 //Calculate current  mean response time for the given request id
