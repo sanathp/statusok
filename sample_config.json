@@ -1,0 +1,90 @@
+{
+"database":{
+	"influxDb":{
+		"host":"localhost",
+		"port":8086,
+		"databaseName":"statusok",
+		"username":"",
+		"password":""
+	}
+},
+"notifications":{
+	"httpEndPoint":{
+		"url":"http://mywebsite.com",
+		"requestType":"POST",
+		"headers":{
+			"Authorization":"Bearer ac2168444f4de69c27d6384ea2ccf61a49669be5a2fb037ccc1f",		
+		}
+	},
+	"mail":{
+		"smtpHost":"smtp.gmail.com",
+		"port":587,
+		"username":"statusok@gmail.com",
+		"password":"password",
+		"from":"statusok@gmail.com",
+		"to":"notify@gmail.com"
+	},
+	"slack":{
+		"channel":"#general",
+		"username":"statusok",
+		"channelWebhookURL":"https://hooks.slack.com/services/T09ZQZhET2E5Tl7"
+	},
+	"mailGun":{
+		"email":"statusok@gmail.com",
+		"apiKey":"key-a8215497fc0",
+		"domain":"statusok.com",
+		"publicApiKey":"pubkey-a225d8a8e7ee48"
+	}
+},
+"requests":[
+		{
+			"url":"http://mywebsite.com/v1/data",
+			"requestType":"POST",
+			"headers":{
+				"Authorization":"Bearer ac2168444f4de69c27d6384ea2ccf61a49669be5a2fb037ccc1f",
+				"Content-Type":"application/json"
+			},
+			"formParams":{
+				"description":"sanath test",
+				"url":"http://google.com"
+			},
+			"checkEvery":30,
+			"responseCode":200,		
+			"responseTime":800
+		},
+		{
+			"url":"http://mywebsite.com/v1/data",
+			"requestType":"GET",
+			"headers":{
+				"Authorization":"Bearer ac2168444f4de69c27d6384ea2ccf61a49669be5a2fb037ccc1f",		
+			},
+			"urlParams":{
+				"name":"statusok"
+			},
+			"checkEvery":300,
+			"responseCode":200,		
+			"responseTime":800
+		},
+		{
+			"url":"http://something.com/v1/data",
+			"requestType":"DELETE",
+			"formParams":{
+				"name":"statusok"
+			},
+			"checkEvery":300,
+			"responseCode":200,		
+			"responseTime":800
+		},
+		{
+			"url":"https://google.com",
+			"requestType":"GET",
+			"headers":{
+			},
+			"params":{
+			},
+			"checkEvery":30,
+			"responseCode":200,		
+			"responseTime":800
+		}
+	]
+}
