@@ -1,13 +1,11 @@
 # StatusOK
 
-## Descripition
-
 Monitor Your Website and Apis from your computer.Get Notified through slack or email when your server is down or response time more than expected.
 
 
 ## Simple Setup to monitor your website and recieve a notitification to Gmail when your website is down
 
-Step 1) Write a config.json with the url information 
+Step 1: Write a config.json with the url information 
 ```
 {
 	"notifications":{
@@ -31,25 +29,24 @@ Step 1) Write a config.json with the url information
 }
 ```
 
-Step 2) Download bin file from here and run the belwo command from your terminal
+Step 2: Download bin file from here and run the belwo command from your terminal
 ```
-	statusok --config config.json
+$ statusok --config config.json
 ```
 Thats it !!!! you are done
 
 To run as background process add & at the end
+
 ```
-statusok --config config.json &	
+$ statusok --config config.json &	
 ```
 to stop the process 
 ```
-jobs
-kill %jobnumber
+$ jobs
+$ kill %jobnumber
 ```
-http://unix.stackexchange.com/questions/104821/how-to-stop-a-background-process
 
-
-## Setup with InfluxDb and Grafanna :
+## Complete Setup with InfluxDb and Grafanna :
 
 ![alt text](https://github.com/sanathp/StatusOK/raw/master/screenshots/graphana.png "Graphana Screenshot")
 
