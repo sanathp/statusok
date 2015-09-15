@@ -3,7 +3,9 @@
 Monitor Your Website and Apis from your computer.Get Notified through slack or email when your server is down or response time more than expected.
 
 
-## Simple Setup to monitor your website and recieve a notitification to Gmail when your website is down
+## Simple Setup
+
+Simple Setup to monitor your website and recieve a notitification to Gmail when your website is down
 
 Step 1: Write a config.json with the url information 
 ```
@@ -50,17 +52,11 @@ $ kill %jobnumber
 
 ![alt text](https://github.com/sanathp/StatusOK/raw/master/screenshots/graphana.png "Graphana Screenshot")
 
-
-Install Infulxdb - url
-
-Install Grafana - url
+Install Infulxdb 
 
 write config file with influx db deatails as below
 
 run statusok --config config.json
-
-open Grafana db and create dashboard from influxdb data as mentioned here -- url 
---write url own detailed explanation ?
 
 
 ## Database :
@@ -79,28 +75,28 @@ mail
 mailgun
 http endpoint
 
-### Write your own notification client
-
-
-
-
+complete details on how to setup .
 
 
 ## Contribution
 
-feel free to pull requests.
-
-if you have written extension for some othe database . or written notification for any other client . you can generate a pull request .
-
-
-## TODO
-
-
-
-
+Feel free to Create pull requests.Write Test cases for the functionalities you have written.if you have written extension for some othe database . or written notification for any other client .
 
 ## License
 
+Copyright 2015 Sanath Kumar Pasumarthy
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License
 
 
 
