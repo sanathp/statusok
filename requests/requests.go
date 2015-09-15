@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sanathp/StatusOk/database"
+	"github.com/sanathp/statusok/database"
 	"io"
 	"net/http"
 	"net/url"
