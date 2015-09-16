@@ -1,11 +1,11 @@
 # StatusOK
 
-Monitor Your Website and Apis from your computer.Get Notified through slack or email when your server is down or response time more than expected.
+Monitor your Website and Apis from your computer.Get Notified through slack or email when your server is down or response time more than expected.
 
 
-## Simple Setup
+## Simple Version
 
-Simple Setup to monitor your website and recieve a notitification to Gmail when your website is down
+Simple Setup to monitor your website and recieve a notitification to your Gmail when your website is down.
 
 Step 1: Write a config.json with the url information 
 ```
@@ -30,12 +30,13 @@ Step 1: Write a config.json with the url information
 	]
 }
 ```
+Turn on access for your gmail https://www.google.com/settings/security/lesssecureapps .
 
-Step 2: Download bin file from here and run the belwo command from your terminal
+Step 2: Download bin file from here and run the below command from your terminal
 ```
 $ statusok --config config.json
 ```
-Thats it !!!! you are done
+Thats it !!!! You will receive a mail when your website is down or response time is more.
 
 To run as background process add & at the end
 
@@ -48,42 +49,49 @@ $ jobs
 $ kill %jobnumber
 ```
 
-## Complete Setup with InfluxDb and Grafanna :
+## Complete Version with InfluxDb and Grafanna :
 
 ![alt text](https://github.com/sanathp/StatusOK/raw/master/screenshots/graphana.png "Graphana Screenshot")
 
-Install Infulxdb 
+You can save data to influx db and view response times over a period of time as above using graphana.
 
-write config file with influx db deatails as below
+[Guide to install influxdb and grafana](https://github.com/sanathp/statusok/blob/master/Config.md#database) 
 
-run statusok --config config.json
+[Guide to write config.json file](https://github.com/sanathp/statusok/blob/master/Config.md#writing-a-config-file)
 
+[Sample config.json file](https://github.com/sanathp/StatusOK/blob/master/sample_config.json)
+
+To run the app
+
+```
+run statusok --config config.json &
+```
 
 ## Database :
 
-currently only influ db is supported .
-if you want to monitor using your own database justw write a file.
+Save Requests response time information and error information to your database by adding db details to config file. Currently only Influxdb 0.9.3+ is supported.
 
-### Write your own database client
-	
+You can also add data to your own database,[view details](https://github.com/sanathp/statusok/blob/master/Config.md#save-data-to-any-other-database)
 
 ## Notifications:
 
-currenlty the below 4 types are supported .click them for more information
-slack
-mail
-mailgun
-http endpoint
+Notifications will be triggered when mean response time is below given response time for a request or when an error is occured . Currently the below clients are supported to receive notifications.For more information on setup [click here](https://github.com/sanathp/statusok/blob/master/Config.md#notifications)
 
-complete details on how to setup .
-
+```
+1) [Slack](https://github.com/sanathp/statusok/blob/master/Config.md#slack)
+2) [Smtp Email](https://github.com/sanathp/statusok/blob/master/Config.md#e-mail)
+3) [Mailgun](https://github.com/sanathp/statusok/blob/master/Config.md#mailgun)
+4) [Http EndPoint](https://github.com/sanathp/statusok/blob/master/Config.md#http-endpoint)
+```
+Adding support to other clients is simple.[view details](https://github.com/sanathp/statusok/blob/master/Config.md#write-your-own-notification-client)
 
 ## Contribution
 
-Feel free to Create pull requests.Write Test cases for the functionalities you have written.if you have written extension for some othe database . or written notification for any other client .
+Contributions are welcomed and greatly appreciated. Create an issue if you find bugs.
+Send a pull request if you have written a new feature or fixed an issue .Please make sure to write test cases.
 
 ## License
-
+```
 Copyright 2015 Sanath Kumar Pasumarthy
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -97,8 +105,4 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License
-
-
-
-
-
+```

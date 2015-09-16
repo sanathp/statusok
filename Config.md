@@ -36,22 +36,21 @@ Config file shouuld be in JSON format (Support for other formats will be added i
 	]
 },
 "notifyWhen":{
-	"meanResponseCount":5 
-	//A notification will be triggered if mean response time of last 5 requests is less than given response time. Default value is 10
+	"meanResponseCount":5 //A notification will be triggered if mean response time of last 5 requests is less than given response time. Default value is 10
 },
-//By default the server runs on port 7321.You can define your custom port number as below
-"port":3215
+"port":3215 //By default the server runs on port 7321.You can define your custom port number as below
+"concurrency":2 //Max Number of requests that can be performed concurrently.Default value is 1.
 
 }
 
 ```
-[Click here](https://github.com/sanathp/StatusOK/blob/master/sample_config.json) to view the Sample config file.
+[Click here](https://github.com/sanathp/StatusOK/blob/master/sample_config.json) to view the Sample config file. Scroll down for more details on requests,notifications and database setup.
 
 ## Requests
 
-You can monitor all types of REST apis or websites as below
+You can monitor all types of REST apis or websites as below.
 
-```
+```json
 {
 	"url":"http://mywebsite.com/v1/data",
 	"requestType":"POST",
@@ -97,22 +96,31 @@ You can monitor all types of REST apis or websites as below
 
 ### Request  parameters 
 
+Description for each request parameter.
 
-| Paramter      | Descriition   | 
-| ------------- |:-------------:| 
-| url     | url of the api| 
-| requestType     | Http Request Type in all capital letters  eg. GET PUT POST DELETE | 
-| headers     | a list of key value pairs which will be added to header of a request| 
-| formParams     | a list of key value pairs which will be added to body of the request . By deafult content type is application/x-www-form-urlencoded . for apllication/json content type add 	"Content-Type":"application/json" to headers| 
-| urlParams     |  a list of key value pais which will be appended to url .eg: http://google.com?name= statusok| 
-|checkEvery|time interval in seconds.If the value is 120,a request will be sent to given url every 2 minutes|
-|responseCode|expected response code when a request is performed .Default values is 200.If response code is not equal then an error notification is triggered.|
-|responseTime| expected response time in milliseconds. when mean response time is below this value a notification is triggered|
+| Paramter      | Description   
+| ------------- |------------- 
+| url     | Http Url 
+| requestType     | Http Request Type in all capital letters  e.g. GET,PUT,POST,DELETE 
+| headers     | A list of key value pairs which will be added to header of a request
+| formParams     | A list of key value pairs which will be added to body of the request.By deafult content type is "application/x-www-form-urlencoded".For aplication/json content type add "Content-Type":"application/json" to headers
+| urlParams     | A list of key value pairs which will be appended to url e.g: http://google.com?name=statusok
+|checkEvery| Time interval in seconds.If the value is 120,the request will be performed every 2 minutes
+|responseCode|Expected response code when a request is performed.Default values is 200.If response code is not equal then an error notification is triggered.
+|responseTime|Expected response time in milliseconds,when mean response time is below this value a notification is triggered
 
 
 ## Notifications 
 
-Notifications will be triggered when mean response time is below given response time for a request or when an error is occured . Currently the below clients are supported to receive notifications.
+Notifications will be triggered when mean response time is below given response time for a request or when an error is occured.Currently the below clients are supported to receive notifications.
+
+```
+1)Slack
+2)Smtp Server
+3)Mailgun
+4)Http EndPoint
+```
+[Write your own client](https://github.com/sanathp/statusok/blob/master/Config.md#write-your-own-notification-client)
 
 ### Slack
 
@@ -168,19 +176,19 @@ To recieve notifications to any http Endpoint add below block to your config fil
 ```	
 ### Write Your own Notification Client
 
-If you want to recieve Notifications to any other clients. Write a struct with below methods and add the Struct to NotificationTypes in notify.go file .
+If you want to recieve Notifications to any other clients. Write a struct with below methods and add the Struct to NotificationTypes in [notify.go](https://github.com/sanathp/statusok/blob/master/notify/notify.go) file.
 
 ```
-	GetClientName() string
-	Initialize() error
-	SendResponseTimeNotification(notification ResponseTimeNotification) error
-	SendErrorNotification(notification ErrorNotification) error
+GetClientName() string
+Initialize() error
+SendResponseTimeNotification(notification ResponseTimeNotification) error
+SendErrorNotification(notification ErrorNotification) error
 ```
 If you have written a new notification client which is useful to others, feel free to create a pull request.
 
 ## Database
  
-Save Requests response time information and error information to your database by adding db details to config file. Currently only Influxdb 0.9.3+ is supported,adding support for any other database is very easy.
+Save Requests response time information and error information to your database by adding db details to config file. Currently only Influxdb 0.9.3+ is supported.[Add support to your database](https://github.com/sanathp/statusok/blob/master/Config.md#save-data-to-any-other-database)
 
 ### Influx Db 0.9.3+
 
@@ -190,8 +198,10 @@ Install Influx db using the below commands.
 wget http://influxdb.s3.amazonaws.com/influxdb_0.9.3_amd64.deb
 dpkg -i influxdb_0.9.3_amd64.deb
 /etc/init.d/influxdb start
+
+More Details : https://influxdb.com/docs/v0.9/introduction/installation.html
 ```
-Default username,password is empty and port is 8086.Add influxDb details as below inside database parameter to your config file.
+Default username,password is empty and port number is 8086.Add influxDb details as below inside database parameter to your config file.
 
 ```
 	"influxDb":{
@@ -205,8 +215,6 @@ Default username,password is empty and port is 8086.Add influxDb details as belo
 
 To visualize data in influxdb you need to install grafana.
 
-![alt text](https://github.com/sanathp/StatusOK/raw/master/screenshots/graphana.png "Graphana Screenshot")
-
 Run below commands to install grafana.
 
 ```
@@ -217,11 +225,15 @@ Run below commands to install grafana.
  service grafana-server start
 
 ```
+Graphana will be running on port 3000 (http://localhost:3000)
+
 Create a new Dahsboard to view graphs as mentioned here http://docs.grafana.org/datasources/influxdb .
+
+![alt text](https://github.com/sanathp/StatusOK/raw/master/screenshots/graphana.png "Graphana Screenshot")
 
 ### Save Data to any other Database
 
-Write a struct with below methods and add the Struct to DatabaseTypes in database.go file.
+Write a struct with below methods and add the Struct to DatabaseTypes in [database.go](https://github.com/sanathp/statusok/blob/master/database/database.go) file.
 
 ```
 	Initialize() error
@@ -231,3 +243,12 @@ Write a struct with below methods and add the Struct to DatabaseTypes in databas
 ```
 
 If you have written structs to support any new database, feel free to create a pull request.
+
+## Logs
+
+By defualt logs are written to stdout in json format.If you want logs to be written to a file,give file path as mentioned below
+
+
+```
+$ statusok --config config.json --log logfilepath.log
+```
