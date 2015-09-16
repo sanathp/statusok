@@ -1,6 +1,6 @@
 ## Writing a Config File
 
-Config file shouuld be in JSON format (Support for other formats will be added in future).
+Config file should be in JSON format (Support for other formats will be added in future).
 
 ## Pattern
 ```
@@ -36,7 +36,7 @@ Config file shouuld be in JSON format (Support for other formats will be added i
 	]
 },
 "notifyWhen":{
-	"meanResponseCount":5 //A notification will be triggered if mean response time of last 5 requests is less than given response time. Default value is 10
+	"meanResponseCount":10 //A notification will be triggered if mean response time of last 10 requests is less than given response time. Default value is 5
 },
 "port":3215 //By default the server runs on port 7321.You can define your custom port number as below
 "concurrency":2 //Max Number of requests that can be performed concurrently.Default value is 1.
@@ -48,7 +48,7 @@ Config file shouuld be in JSON format (Support for other formats will be added i
 
 ## Requests
 
-You can monitor all types of REST apis or websites as below.
+You can monitor all types of REST APIs or websites as below.
 
 ```json
 {
@@ -98,7 +98,7 @@ You can monitor all types of REST apis or websites as below.
 
 Description for each request parameter.
 
-| Paramter      | Description   
+| Parameter      | Description   
 | ------------- |------------- 
 | url     | Http Url 
 | requestType     | Http Request Type in all capital letters  e.g. GET,PUT,POST,DELETE 
@@ -162,7 +162,7 @@ To recieve notifications to your email Using Mailgun add below block to your con
 }
 ```
 ### Http EndPoint
-To recieve notifications to any http Endpoint add below block to your config file with request details. Notification will be sent as a value to parameter "message"
+To recieve notifications to any http Endpoint add below block to your config file with request details. Notification will be sent as a value to parameter "message".
 
 ```
 "httpEndPoint":{
@@ -188,7 +188,7 @@ If you have written a new notification client which is useful to others, feel fr
 
 ## Database
  
-Save Requests response time information and error information to your database by adding db details to config file. Currently only Influxdb 0.9.3+ is supported.[Add support to your database](https://github.com/sanathp/statusok/blob/master/Config.md#save-data-to-any-other-database)
+Save Requests response time information and error information to your database by adding database details to config file. Currently only Influxdb 0.9.3+ is supported.[Add support to your database](https://github.com/sanathp/statusok/blob/master/Config.md#save-data-to-any-other-database)
 
 ### Influx Db 0.9.3+
 
@@ -204,13 +204,13 @@ More Details : https://influxdb.com/docs/v0.9/introduction/installation.html
 Default username,password is empty and port number is 8086.Add influxDb details as below inside database parameter to your config file.
 
 ```
-	"influxDb":{
-		"host":"localhost",
-		"port":8086,
-		"databaseName":"statusok",
-		"username":"",
-		"password":""
-	}
+"influxDb":{
+	"host":"localhost",
+	"port":8086,
+	"databaseName":"statusok",
+	"username":"",
+	"password":""
+}
 ```
 
 To visualize data in influxdb you need to install grafana.
@@ -236,10 +236,10 @@ Create a new Dahsboard to view graphs as mentioned here http://docs.grafana.org/
 Write a struct with below methods and add the Struct to DatabaseTypes in [database.go](https://github.com/sanathp/statusok/blob/master/database/database.go) file.
 
 ```
-	Initialize() error
-	GetDatabaseName() string
-	AddRequestInfo(requestInfo RequestInfo) error
-	AddErrorInfo(errorInfo ErrorInfo) error
+Initialize() error
+GetDatabaseName() string
+AddRequestInfo(requestInfo RequestInfo) error
+AddErrorInfo(errorInfo ErrorInfo) error
 ```
 
 If you have written structs to support any new database, feel free to create a pull request.

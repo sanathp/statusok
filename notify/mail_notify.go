@@ -3,7 +3,6 @@ package notify
 //Inspired from https://github.com/zbindenren/logrus_mail
 import (
 	"bytes"
-	"fmt"
 	"net"
 	"net/mail"
 	"net/smtp"
@@ -70,8 +69,6 @@ func (mailNotify MailNotify) Initialize() error {
 func (mailNotify MailNotify) SendResponseTimeNotification(responseTimeNotification ResponseTimeNotification) error {
 	if isAuthorized {
 
-		fmt.Println("sending mail ", mailNotify)
-
 		auth := smtp.PlainAuth("", mailNotify.Username, mailNotify.Password, mailNotify.Host)
 
 		message := getMessageFromResponseTimeNotification(responseTimeNotification)
@@ -85,7 +82,7 @@ func (mailNotify MailNotify) SendResponseTimeNotification(responseTimeNotificati
 			[]string{mailNotify.To},
 			bytes.NewBufferString(message).Bytes(),
 		)
-		println("Mail sent")
+
 		if err != nil {
 			return err
 		}

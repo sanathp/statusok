@@ -1,4 +1,4 @@
-package statusok
+package main
 
 import (
 	"encoding/json"
@@ -54,7 +54,7 @@ func main() {
 		if fileExists(c.String("config")) {
 
 			if len(c.String("log")) != 0 {
-				//log prameter given.Check if file can be created at given path
+				//log parameter given.Check if file can be created at given path
 
 				if !logFilePathValid(c.String("log")) {
 					println("Invalid File Path given for parameter --log")
@@ -100,7 +100,6 @@ func startMonitoring(configFileName string, logFileName string) {
 	//Create unique ids for each request date given in config file
 	reqs, ids := validateAndCreateIdsForRequests(config.Requests)
 
-	fmt.Println(reqs[0])
 	//Set up and initialize databases
 	database.AddNew(config.Database)
 	database.Initialize(ids, config.NotifyWhen.MeanResponseCount, config.NotifyWhen.ErrorCount)
@@ -126,7 +125,7 @@ func startMonitoring(configFileName string, logFileName string) {
 //Currently just tells status ok is running
 //Planning to display useful information in future
 func statusHandler(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "StatusOk is running")
+	io.WriteString(w, "StatusOk is running \n Planning to display useful information in further releases")
 }
 
 //Tells whether a file exits or not

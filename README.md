@@ -1,11 +1,11 @@
 # StatusOK
 
-Monitor your Website and Apis from your computer.Get Notified through slack or email when your server is down or response time more than expected.
+Monitor your Website and APIs from your computer.Get notified through Slack or E-mail when your server is down or response time is more than expected.
 
 
 ## Simple Version
 
-Simple Setup to monitor your website and recieve a notitification to your Gmail when your website is down.
+Simple Setup to monitor your website and recieve a notification to your Gmail when your website is down.
 
 Step 1: Write a config.json with the url information 
 ```
@@ -34,14 +34,14 @@ Turn on access for your gmail https://www.google.com/settings/security/lesssecur
 
 Step 2: Download bin file from here and run the below command from your terminal
 ```
-$ statusok --config config.json
+$ ./statusok --config config.json
 ```
 Thats it !!!! You will receive a mail when your website is down or response time is more.
 
 To run as background process add & at the end
 
 ```
-$ statusok --config config.json &	
+$ ./statusok --config config.json &	
 ```
 to stop the process 
 ```
@@ -49,7 +49,7 @@ $ jobs
 $ kill %jobnumber
 ```
 
-## Complete Version with InfluxDb and Grafanna :
+## Complete Version using InfluxDb
 
 ![alt text](https://github.com/sanathp/StatusOK/raw/master/screenshots/graphana.png "Graphana Screenshot")
 
@@ -57,6 +57,51 @@ You can save data to influx db and view response times over a period of time as 
 
 [Guide to install influxdb and grafana](https://github.com/sanathp/statusok/blob/master/Config.md#database) 
 
+With StatusOk you can monitor all your REST APIs by adding api details to config file as below.A Notification will be triggered when you api is down or response time is more than expected.
+
+```json
+{
+	"url":"http://mywebsite.com/v1/data",
+	"requestType":"POST",
+	"headers":{
+		"Authorization":"Bearer ac2168444f4de69c27d6384ea2ccf61a49669be5a2fb037ccc1f",
+		"Content-Type":"application/json"
+	},
+	"formParams":{
+		"description":"sanath test",
+		"url":"http://google.com"
+	},
+	"checkEvery":30,
+	"responseCode":200,		
+	"responseTime":800
+},
+
+{
+	"url":"http://mywebsite.com/v1/data",
+	"requestType":"GET",
+	"headers":{
+		"Authorization":"Bearer ac2168444f4de69c27d6384ea2ccf61a49669be5a2fb037ccc1f",		
+	},
+	"urlParams":{
+		"name":"statusok"
+	},
+	"checkEvery":300,
+	"responseCode":200,		
+	"responseTime":800
+},
+
+{
+	"url":"http://something.com/v1/data",
+	"requestType":"DELETE",
+	"formParams":{
+		"name":"statusok"
+	},
+	"checkEvery":300,
+	"responseCode":200,		
+	"responseTime":800
+}
+
+```
 [Guide to write config.json file](https://github.com/sanathp/statusok/blob/master/Config.md#writing-a-config-file)
 
 [Sample config.json file](https://github.com/sanathp/StatusOK/blob/master/sample_config.json)
@@ -64,25 +109,24 @@ You can save data to influx db and view response times over a period of time as 
 To run the app
 
 ```
-run statusok --config config.json &
+$ ./statusok --config config.json &
 ```
 
-## Database :
+## Database
 
-Save Requests response time information and error information to your database by adding db details to config file. Currently only Influxdb 0.9.3+ is supported.
+Save Requests response time information and error information to your database by adding database details to config file. Currently only Influxdb 0.9.3+ is supported.
 
 You can also add data to your own database,[view details](https://github.com/sanathp/statusok/blob/master/Config.md#save-data-to-any-other-database)
 
-## Notifications:
+## Notifications
 
 Notifications will be triggered when mean response time is below given response time for a request or when an error is occured . Currently the below clients are supported to receive notifications.For more information on setup [click here](https://github.com/sanathp/statusok/blob/master/Config.md#notifications)
 
-```
 1) [Slack](https://github.com/sanathp/statusok/blob/master/Config.md#slack)
 2) [Smtp Email](https://github.com/sanathp/statusok/blob/master/Config.md#e-mail)
 3) [Mailgun](https://github.com/sanathp/statusok/blob/master/Config.md#mailgun)
 4) [Http EndPoint](https://github.com/sanathp/statusok/blob/master/Config.md#http-endpoint)
-```
+
 Adding support to other clients is simple.[view details](https://github.com/sanathp/statusok/blob/master/Config.md#write-your-own-notification-client)
 
 ## Contribution
