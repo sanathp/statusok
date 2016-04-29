@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/influxdb/influxdb/client"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/influxdata/influxdb/client/v2"
 )
 
 type InfluxDb struct {
@@ -19,7 +20,7 @@ type InfluxDb struct {
 }
 
 var (
-	influxDBcon *client.Client
+	influxDBcon client.Client
 )
 
 const (
@@ -41,20 +42,20 @@ func (influxDb InfluxDb) Initialize() error {
 		return err
 	}
 
-	conf := client.Config{
-		URL:      *u,
+	conf := client.HTTPConfig{
+		Addr:     u.String(),
 		Username: influxDb.Username,
 		Password: influxDb.Password,
 	}
 
-	influxDBcon, err = client.NewClient(conf)
+	influxDBcon, err = client.NewHTTPClient(conf)
 
 	if err != nil {
 		println("InfluxDB : Failed to connect to Database . Please check the details entered in the config file\nError Details: ", err.Error())
 		return err
 	}
 
-	_, ver, err := influxDBcon.Ping()
+	_, ver, err := influxDBcon.Ping(10 * time.Second)
 
 	if err != nil {
 		println("InfluxDB : Failed to connect to Database . Please check the details entered in the config file\nError Details: ", err.Error())
@@ -79,71 +80,87 @@ func (influxDb InfluxDb) Initialize() error {
 //Add request information to database
 func (influxDb InfluxDb) AddRequestInfo(requestInfo RequestInfo) error {
 
-	var pts = make([]client.Point, 0)
+	tags := map[string]string{
+		"requestId":   strconv.Itoa(requestInfo.Id),
+		"requestType": requestInfo.RequestType,
+	}
+	fields := map[string]interface{}{
+		"responseTime": requestInfo.ResponseTime,
+		"responseCode": requestInfo.ResponseCode,
+	}
 
-	point := client.Point{
-		Measurement: requestInfo.Url,
-		Tags: map[string]string{
-			"requestId":   strconv.Itoa(requestInfo.Id),
-			"requestType": requestInfo.RequestType,
-		},
-		Fields: map[string]interface{}{
-			"responseTime": requestInfo.ResponseTime,
-			"responseCode": requestInfo.ResponseCode,
-		},
-		Time:      time.Now(),
+	bps, err := client.NewBatchPoints(client.BatchPointsConfig{
+		Database:  influxDb.DatabaseName,
 		Precision: "ms",
-	}
-
-	pts = append(pts, point)
-
-	bps := client.BatchPoints{
-		Points:          pts,
-		Database:        influxDb.DatabaseName,
-		RetentionPolicy: "default",
-	}
-
-	_, err := influxDBcon.Write(bps)
+	})
 
 	if err != nil {
 		return err
 	}
+
+	point, err := client.NewPoint(
+		requestInfo.Url,
+		tags,
+		fields,
+		time.Now(),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	bps.AddPoint(point)
+
+	err = influxDBcon.Write(bps)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 //Add Error information to database
 func (influxDb InfluxDb) AddErrorInfo(errorInfo ErrorInfo) error {
 
-	var pts = make([]client.Point, 0)
-	point := client.Point{
-		Measurement: errorInfo.Url,
-		Tags: map[string]string{
-			"requestId":   strconv.Itoa(errorInfo.Id),
-			"requestType": errorInfo.RequestType,
-			"reason":      errorInfo.Reason.Error(),
-		},
-		Fields: map[string]interface{}{
-			"responseBody": errorInfo.ResponseBody,
-			"responseCode": errorInfo.ResponseCode,
-			"otherInfo":    errorInfo.OtherInfo,
-		},
-		Time:      time.Now(),
-		Precision: "ms",
+	tags := map[string]string{
+		"requestId":   strconv.Itoa(errorInfo.Id),
+		"requestType": errorInfo.RequestType,
+		"reason":      errorInfo.Reason.Error(),
+	}
+	fields := map[string]interface{}{
+		"responseBody": errorInfo.ResponseBody,
+		"responseCode": errorInfo.ResponseCode,
+		"otherInfo":    errorInfo.OtherInfo,
 	}
 
-	pts = append(pts, point)
-
-	bps := client.BatchPoints{
-		Points:          pts,
-		Database:        influxDb.DatabaseName,
-		RetentionPolicy: "default",
-	}
-
-	_, err := influxDBcon.Write(bps)
+	point, err := client.NewPoint(
+		errorInfo.Url,
+		tags,
+		fields,
+		time.Now(),
+	)
 
 	if err != nil {
 		return err
 	}
+	bps, err := client.NewBatchPoints(client.BatchPointsConfig{
+		Database:  influxDb.DatabaseName,
+		Precision: "ms",
+	})
+
+	if err != nil {
+		return err
+	}
+
+	bps.AddPoint(point)
+
+	err = influxDBcon.Write(bps)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

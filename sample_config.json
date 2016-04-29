@@ -13,7 +13,7 @@
 		"url":"http://mywebsite.com",
 		"requestType":"POST",
 		"headers":{
-			"Authorization":"Bearer ac2168444f4de69c27d6384ea2ccf61a49669be5a2fb037ccc1f",		
+			"Authorization":"Bearer ac2168444f4de69c27d6384ea2ccf61a49669be5a2fb037ccc1f"
 		}
 	},
 	"mail":{
@@ -49,20 +49,20 @@
 				"url":"http://google.com"
 			},
 			"checkEvery":30,
-			"responseCode":200,		
+			"responseCode":200,
 			"responseTime":800
 		},
 		{
 			"url":"http://mywebsite.com/v1/data",
 			"requestType":"GET",
 			"headers":{
-				"Authorization":"Bearer ac2168444f4de69c27d6384ea2ccf61a49669be5a2fb037ccc1f",		
+				"Authorization":"Bearer ac2168444f4de69c27d6384ea2ccf61a49669be5a2fb037ccc1f"
 			},
 			"urlParams":{
 				"name":"statusok"
 			},
 			"checkEvery":300,
-			"responseCode":200,		
+			"responseCode":200,
 			"responseTime":800
 		},
 		{
@@ -72,7 +72,7 @@
 				"name":"statusok"
 			},
 			"checkEvery":300,
-			"responseCode":200,		
+			"responseCode":200,
 			"responseTime":800
 		},
 		{
@@ -83,7 +83,7 @@
 			"params":{
 			},
 			"checkEvery":30,
-			"responseCode":200,		
+			"responseCode":200,
 			"responseTime":800
 		}
 	]
