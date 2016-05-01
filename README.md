@@ -32,7 +32,7 @@ Step 1: Write a config.json with the url information
 ```
 Turn on access for your gmail https://www.google.com/settings/security/lesssecureapps .
 
-Step 2: Download bin file from [here](https://github.com/sanathp/statusok/releases/download/0.1/statusok) and run the below command from your terminal
+Step 2: Download bin file from [here](https://github.com/sanathp/statusok/releases/) and run the below command from your terminal
 ```
 $ ./statusok --config config.json
 ```
