@@ -364,5 +364,5 @@ func GetJsonParamsBody(params map[string]string) (io.Reader, error) {
 
 //creates an error when response code from server is not equal to response code mentioned in config file
 func errResposeCode(status int, expectedStatus int) error {
-	return errors.New(fmt.Sprintf("Got Response code %v .Expeceted Response Code %v ", status, expectedStatus))
+	return errors.New(fmt.Sprintf("Got Response code %v. Expected Response Code %v ", status, expectedStatus))
 }
