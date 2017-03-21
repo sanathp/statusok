@@ -76,7 +76,7 @@
 			"responseTime":800
 		},
 		{
-			"url":"https://google.com",
+			"url":"http://golang.org",
 			"requestType":"GET",
 			"headers":{
 			},
@@ -84,7 +84,9 @@
 			},
 			"checkEvery":30,
 			"responseCode":200,
-			"responseTime":800
+			"responseTime":800,
+			"redirectLimit": 1,
+			"targetUrl": "https://golang.org/"
 		}
 	]
 }

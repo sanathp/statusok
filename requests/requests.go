@@ -32,15 +32,17 @@ const (
 )
 
 type RequestConfig struct {
-	Id           int
-	Url          string            `json:"url"`
-	RequestType  string            `json:"requestType"`
-	Headers      map[string]string `json:"headers"`
-	FormParams   map[string]string `json:"formParams"`
-	UrlParams    map[string]string `json:"urlParams"`
-	ResponseCode int               `json:"responseCode"`
-	ResponseTime int64             `json:"responseTime"`
-	CheckEvery   time.Duration     `json:"checkEvery"`
+	Id            int
+	Url           string            `json:"url"`
+	RequestType   string            `json:"requestType"`
+	Headers       map[string]string `json:"headers"`
+	FormParams    map[string]string `json:"formParams"`
+	UrlParams     map[string]string `json:"urlParams"`
+	ResponseCode  int               `json:"responseCode"`
+	ResponseTime  int64             `json:"responseTime"`
+	CheckEvery    time.Duration     `json:"checkEvery"`
+	RedirectLimit int               `json:"redirectimit"`
+	TargetUrl     string            `json:"targetUrl"`
 }
 
 //Set Id for request
@@ -255,7 +257,21 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 		}
 	*/
 
-	client := &http.Client{}
+	redirectPolicyFunc := func(req *http.Request, via []*http.Request) error {
+		if requestConfig.RedirectLimit < 1 {
+			return nil
+		}
+
+		if len(via) > requestConfig.RedirectLimit {
+			return errors.New(fmt.Sprintf("Redirects limit %v has been reached", requestConfig.RedirectLimit))
+		}
+
+		return nil
+	}
+
+	client := &http.Client{
+		CheckRedirect: redirectPolicyFunc,
+	}
 	start := time.Now()
 
 	getResponse, respErr := client.Do(request)
@@ -294,6 +310,13 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 			OtherInfo:    "",
 		})
 		return errResposeCode(getResponse.StatusCode, requestConfig.ResponseCode)
+	}
+
+	if requestConfig.TargetUrl != "" {
+		targetUrl := getResponse.Request.URL.String()
+		if targetUrl != requestConfig.TargetUrl {
+			return errTargetUrl(targetUrl, requestConfig.TargetUrl)
+		}
 	}
 
 	elapsed := time.Since(start)
@@ -365,4 +388,8 @@ func GetJsonParamsBody(params map[string]string) (io.Reader, error) {
 //creates an error when response code from server is not equal to response code mentioned in config file
 func errResposeCode(status int, expectedStatus int) error {
 	return errors.New(fmt.Sprintf("Got Response code %v. Expected Response Code %v ", status, expectedStatus))
+}
+
+func errTargetUrl(targetUrl string, expectedUrl string) error {
+	return errors.New(fmt.Sprintf("Target url is %v. Expected url %v", targetUrl, expectedUrl))
 }
