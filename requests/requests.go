@@ -315,6 +315,16 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 	if requestConfig.TargetUrl != "" {
 		targetUrl := getResponse.Request.URL.String()
 		if targetUrl != requestConfig.TargetUrl {
+			go database.AddErrorInfo(database.ErrorInfo{
+				Id:           requestConfig.Id,
+				Url:          requestConfig.Url,
+				RequestType:  requestConfig.RequestType,
+				ResponseCode: getResponse.StatusCode,
+				ResponseBody: convertResponseToString(getResponse),
+				Reason:       errTargetUrl(targetUrl, requestConfig.TargetUrl),
+				OtherInfo:    "",
+			})
+
 			return errTargetUrl(targetUrl, requestConfig.TargetUrl)
 		}
 	}
