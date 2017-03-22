@@ -298,7 +298,7 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 
 	defer getResponse.Body.Close()
 
-	if getResponse.StatusCode != requestConfig.ResponseCode {
+	if requestConfig.ResponseCode > 0 && getResponse.StatusCode != requestConfig.ResponseCode {
 		//Response code is not the expected one .Add Error to database
 		go database.AddErrorInfo(database.ErrorInfo{
 			Id:           requestConfig.Id,
