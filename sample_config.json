@@ -85,7 +85,7 @@
 			"checkEvery":30,
 			"responseCode":200,
 			"responseTime":800,
-			"redirectLimit": 1,
+			"requestLimit": 1,
 			"targetUrl": "https://golang.org/"
 		}
 	]

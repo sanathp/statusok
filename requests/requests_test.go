@@ -47,23 +47,23 @@ func TestInvalidPostRequest(t *testing.T) {
 	}
 }
 
-func TestRedirectLimitZero(t *testing.T) {
-	google := RequestConfig{Id: 1, Url: "http://google.com", RequestType: "GET", RedirectLimit: 0}
+func TestRequestLimitOne(t *testing.T) {
+	google := RequestConfig{Id: 1, Url: "http://google.com", RequestType: "GET", RequestLimit: 1}
 
 	err := PerformRequest(google, nil)
 
 	if err == nil {
-		t.Error("Redirect limit 0 should not allow any redirects")
+		t.Error("Request limit 1 should not allow any redirects")
 	}
 }
 
-func TestRedirectLimitNonZero(t *testing.T) {
-	google := RequestConfig{Id: 1, Url: "http://google.com", RequestType: "GET", RedirectLimit: 10}
+func TestRequestLimitBig(t *testing.T) {
+	google := RequestConfig{Id: 1, Url: "http://google.com", RequestType: "GET", RequestLimit: 10}
 
 	err := PerformRequest(google, nil)
 
 	if err != nil {
-		t.Error("Invalid checking for redirect limit")
+		t.Error("Invalid checking for request limit")
 	}
 }
 

@@ -32,17 +32,17 @@ const (
 )
 
 type RequestConfig struct {
-	Id            int
-	Url           string            `json:"url"`
-	RequestType   string            `json:"requestType"`
-	Headers       map[string]string `json:"headers"`
-	FormParams    map[string]string `json:"formParams"`
-	UrlParams     map[string]string `json:"urlParams"`
-	ResponseCode  int               `json:"responseCode"`
-	ResponseTime  int64             `json:"responseTime"`
-	CheckEvery    time.Duration     `json:"checkEvery"`
-	RedirectLimit int               `json:"redirectimit"`
-	TargetUrl     string            `json:"targetUrl"`
+	Id           int
+	Url          string            `json:"url"`
+	RequestType  string            `json:"requestType"`
+	Headers      map[string]string `json:"headers"`
+	FormParams   map[string]string `json:"formParams"`
+	UrlParams    map[string]string `json:"urlParams"`
+	ResponseCode int               `json:"responseCode"`
+	ResponseTime int64             `json:"responseTime"`
+	CheckEvery   time.Duration     `json:"checkEvery"`
+	RequestLimit int               `json:"requestLimit"`
+	TargetUrl    string            `json:"targetUrl"`
 }
 
 //Set Id for request
@@ -258,12 +258,12 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 	*/
 
 	redirectPolicyFunc := func(req *http.Request, via []*http.Request) error {
-		if requestConfig.RedirectLimit < 1 {
+		if requestConfig.RequestLimit < 1 {
 			return nil
 		}
 
-		if len(via) > requestConfig.RedirectLimit {
-			return errors.New(fmt.Sprintf("Redirects limit %v has been reached", requestConfig.RedirectLimit))
+		if len(via) >= requestConfig.RequestLimit {
+			return errors.New(fmt.Sprintf("Requests limit %v has been reached", requestConfig.RequestLimit))
 		}
 
 		return nil
