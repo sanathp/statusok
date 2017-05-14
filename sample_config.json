@@ -34,6 +34,11 @@
 		"apiKey":"key-a8215497fc0",
 		"domain":"statusok.com",
 		"publicApiKey":"pubkey-a225d8a8e7ee48"
+	},
+	"pagerduty":{
+		"url":"https://events.pagerduty.com/v2/enqueue",
+		"routingKey":"abcdefghijklmnopqrstuvwxyz123456",
+		"severity":"info"
 	}
 },
 "requests":[
