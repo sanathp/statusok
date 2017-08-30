@@ -115,17 +115,17 @@ func SendTestNotification() {
 			println("Error Details :", err.Error())
 			os.Exit(3)
 		} else {
-			println("Sent Test Response Time notification to ", value.GetClientName(), ".Make sure you recieved it")
+			println("Sent Test Response Time notification to ", value.GetClientName(), ". Make sure you received it")
 		}
 
-		err1 := value.SendErrorNotification(ErrorNotification{"http://test.com", "GET", "This is test notification", "Test notiification", "test"})
+		err1 := value.SendErrorNotification(ErrorNotification{"http://test.com", "GET", "This is test notification", "Test notification", "test"})
 
 		if err1 != nil {
 			println("Failed to Send Error notification to ", value.GetClientName(), " Please check the details entered in the config file")
 			println("Error Details :", err1.Error())
 			os.Exit(3)
 		} else {
-			println("Sent Test Error notification to ", value.GetClientName(), ".Make sure you recieved it")
+			println("Sent Test Error notification to ", value.GetClientName(), ". Make sure you received it")
 		}
 	}
 }
