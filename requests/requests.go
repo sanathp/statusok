@@ -18,6 +18,8 @@ var (
 	RequestsList   []RequestConfig
 	requestChannel chan RequestConfig
 	throttle       chan int
+	ProxyString	*string
+	IgnoreCertificates	*bool
 )
 
 const (
@@ -254,8 +256,29 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 			Timeout: timeout,
 		}
 	*/
+	tr := &http.Transport{}
 
-	client := &http.Client{}
+	if len(*ProxyString) > 0 {
+
+		proxyUrl, _ := url.Parse(*ProxyString)
+
+		tr= &http.Transport{
+			Proxy: http.ProxyURL(proxyUrl),
+			TLSClientConfig:&tls.Config{InsecureSkipVerify: *IgnoreCertificates},
+			//client := &http.Client{Transport:tr},
+		}
+
+
+	} else {
+		tr= &http.Transport{
+			TLSClientConfig:&tls.Config{InsecureSkipVerify: *IgnoreCertificates},
+			//client := &http.Client{Transport:tr},
+		}
+
+	}
+
+
+	client := &http.Client{Transport:tr}
 	start := time.Now()
 
 	getResponse, respErr := client.Do(request)
