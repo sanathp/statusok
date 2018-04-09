@@ -119,6 +119,7 @@ Notifications will be triggered when mean response time is below given response 
 2)Smtp Server
 3)Mailgun
 4)Http EndPoint
+5)Dingding
 ```
 [Write your own client](https://github.com/sanathp/statusok/blob/master/Config.md#write-your-own-notification-client)
 
