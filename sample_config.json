@@ -39,7 +39,14 @@
 		"url":"https://events.pagerduty.com/v2/enqueue",
 		"routingKey":"abcdefghijklmnopqrstuvwxyz123456",
 		"severity":"info"
-	}
+	},
+    "dingding":{
+        "url": "https://oapi.dingtalk.com/robot/send?access_token=1b153686301db8662",
+        "requestType":"POST",
+        "headers":{
+            "Content-Type":"application/json"
+    	}
+    }
 },
 "requests":[
 		{
