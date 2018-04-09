@@ -174,6 +174,20 @@ To recieve notifications to any http Endpoint add below block to your config fil
 	}
 }
 ```	
+### Dingding
+To recieve notifications to any Dingding add below block to your config file with request details.
+
+```
+"dingding":{
+        "url": "https://oapi.dingtalk.com/robot/send?access_token=3d21b0b12499ab54e74805",
+        "requestType":"POST",
+        "headers":{
+            "Content-Type":"application/json"
+        }
+}
+```
+[Dingding Dev Document](https://open-doc.dingtalk.com/docs/doc.htm?spm=a219a.7629140.0.0.Tvbh61&treeId=257&articleId=105735&docType=1)
+
 ### Write Your own Notification Client
 
 If you want to recieve Notifications to any other clients. Write a struct with below methods and add the Struct to NotificationTypes in [notify.go](https://github.com/sanathp/statusok/blob/master/notify/notify.go) file.
