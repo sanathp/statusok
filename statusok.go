@@ -47,6 +47,16 @@ func main() {
 			Value: "",
 			Usage: "file to save logs",
 		},
+		cli.StringFlag{
+			Name: "proxy",
+			Value: "",
+			Usage: "proxy-server:port",
+		},
+		cli.BoolFlag{
+			Name: "ignorecertificates",
+			Usage: "ignore invalid certificates (compulsory advice: avoid)",
+		},
+
 	}
 
 	app.Action = func(c *cli.Context) {
@@ -64,7 +74,13 @@ func main() {
 
 			println("Reading File :", c.String("config"))
 
+			ProxyString := c.String("proxy")
+			requests.ProxyString = &ProxyString
+			IgnoreCertificates := c.Bool("ignorecertificates")
+			requests.IgnoreCertificates = &IgnoreCertificates
+
 			//Start monitoring when a valid file path is given
+
 			startMonitoring(c.String("config"), c.String("log"))
 		} else {
 			println("Config file not present at the given location: ", c.String("config"), "\nPlease give correct file location using --config parameter")
