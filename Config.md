@@ -5,7 +5,7 @@ Config file should be in JSON format (Support for other formats will be added in
 ## Pattern
 ```
 {
-"notification":{
+"notifications":{
 	//notification clients to send notifications
 	"slack":{
 		"channel":"#general",
