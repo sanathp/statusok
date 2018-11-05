@@ -71,7 +71,7 @@ func AddNew(notificationTypes NotificationTypes) {
 			println("Notifications : Failed to Initialize ", value.GetClientName(), ".Please check the details in config file ")
 			println("Error Details :", initErr.Error())
 		} else {
-			println("Notifications :", value.GetClientName(), " Intialized")
+			println("Notifications :", value.GetClientName(), " Initialized")
 		}
 
 	}
