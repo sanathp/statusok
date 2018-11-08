@@ -40,16 +40,17 @@ func (dingdingNotify DingdingNotify) SendResponseTimeNotification(responseTimeNo
 	}
 	fmt.Printf("%v", msgParam)
 
-	if dingdingNotify.Headers[ContentType] == JsonContentType {
-
-		jsonBody, jsonErr := getJsonParamsBodyDingding(msgParam)
-		if jsonErr != nil {
-			return jsonErr
-		}
-		request, reqErr = http.NewRequest(dingdingNotify.RequestType,
-			dingdingNotify.Url,
-			jsonBody)
+	if !(dingdingNotify.Headers[ContentType] == JsonContentType) {
+		return fmt.Errorf("No content provided")
 	}
+
+	jsonBody, jsonErr := getJsonParamsBodyDingding(msgParam)
+	if jsonErr != nil {
+		return jsonErr
+	}
+	request, reqErr = http.NewRequest(dingdingNotify.RequestType,
+		dingdingNotify.Url,
+		jsonBody)
 
 	if reqErr != nil {
 		return reqErr

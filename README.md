@@ -2,6 +2,32 @@
 
 Monitor your Website and APIs from your computer.Get notified through Slack or E-mail when your server is down or response time is more than expected.
 
+## Building and running
+
+You can build or run this project via docker or locally.  If running Go 1.11 or later, you can vendor the project via:
+
+```
+GO111MODULE=on go mod vendor
+```
+
+And then build:
+
+```
+go build
+```
+
+Alternatively, you can build a docker container:
+
+```
+docker build -t sanathp/statusok
+```
+
+This relies on the config being passed through as an environment variable.  For example, support you have your config locally in config.json:
+
+```
+CONFIG=$(cat config.json)
+docker run --rm -e "CONFIG=$(echo $CONFIG)" sanathp/statusok
+```
 
 ## Simple Version
 
