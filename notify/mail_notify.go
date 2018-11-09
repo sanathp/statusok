@@ -11,12 +11,12 @@ import (
 )
 
 type MailNotify struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Host     string `json:"smtpHost"`
-	Port     int    `json:"port"`
-	From     string `json:"from"`
-	To       string `json:"to"`
+	Username string   `json:"username"`
+	Password string   `json:"password"`
+	Host     string   `json:"smtpHost"`
+	Port     int      `json:"port"`
+	From     string   `json:"from"`
+	To       []string `json:"to"`
 }
 
 var (
@@ -57,12 +57,15 @@ func (mailNotify MailNotify) Initialize() error {
 	if err != nil {
 		return err
 	}
-	_, err = mail.ParseAddress(mailNotify.To)
-	//TODO: validate port and email host
-	if err != nil {
-		return err
-	}
 
+	//TODO: validate port and email host
+	for _, mailAddress := range mailNotify.To {
+		_, err = mail.ParseAddress(mailAddress)
+		if err != nil {
+			return err
+		}
+
+	}
 	return nil
 }
 
@@ -79,7 +82,8 @@ func (mailNotify MailNotify) SendResponseTimeNotification(responseTimeNotificati
 			mailNotify.Host+":"+strconv.Itoa(mailNotify.Port),
 			auth,
 			mailNotify.From,
-			[]string{mailNotify.To},
+			//[]string{mailNotify.To},
+			mailNotify.To,
 			bytes.NewBufferString(message).Bytes(),
 		)
 
@@ -119,7 +123,8 @@ func (mailNotify MailNotify) SendErrorNotification(errorNotification ErrorNotifi
 			mailNotify.Host+":"+strconv.Itoa(mailNotify.Port),
 			auth,
 			mailNotify.From,
-			[]string{mailNotify.To},
+			//[]string{mailNotify.To},
+			mailNotify.To,
 			bytes.NewBufferString(message).Bytes(),
 		)
 		if err != nil {
