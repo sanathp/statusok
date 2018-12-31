@@ -13,7 +13,6 @@ type MailgunNotify struct {
 	Email        string `json:"email"`
 	ApiKey       string `json:"apiKey"`
 	Domain       string `json:"domain"`
-	PublicApiKey string `json:"publicApiKey"`
 }
 
 func (mailgunNotify MailgunNotify) GetClientName() string {
@@ -33,11 +32,7 @@ func (mailgunNotify MailgunNotify) Initialize() error {
 		return errors.New("Mailgun: Invalid Domain name")
 	}
 
-	if len(strings.TrimSpace(mailgunNotify.PublicApiKey)) == 0 {
-		return errors.New("Mailgun: Invalid PublicApiKey")
-	}
-
-	mailGunClient = mailgun.NewMailgun(mailgunNotify.Domain, mailgunNotify.ApiKey, mailgunNotify.PublicApiKey)
+	mailGunClient = mailgun.NewMailgun(mailgunNotify.Domain, mailgunNotify.ApiKey)
 
 	return nil
 }
