@@ -10,7 +10,9 @@ import (
 )
 
 type DingdingNotify struct {
-	HttpNotify
+	Url         string            `json:"url"`
+	RequestType string            `json:"requestType"`
+	Headers     map[string]string `json:"headers"`
 }
 
 type Txt struct {
