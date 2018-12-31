@@ -11,7 +11,8 @@ ADD . /go/src/github.com/sanathp/StatusOk
 # (You may fetch or manage dependencies here,
 # either manually or with a tool like "godep".)
 RUN go get github.com/codegangsta/cli
-RUN go get github.com/influxdb/influxdb
+RUN go get github.com/influxdata/influxdb
+RUN go get github.com/influxdata/platform
 RUN go get github.com/mailgun/mailgun-go
 RUN go install github.com/sanathp/StatusOk
 
