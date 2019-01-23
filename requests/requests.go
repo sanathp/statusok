@@ -174,9 +174,13 @@ func listenToRequestChannel() {
 	//throttle is used to limit number of requests executed at a time
 	for {
 		select {
-		case requect := <-requestChannel:
+		case request := <-requestChannel:
 			throttle <- 1
-			go PerformRequest(requect, throttle)
+			if !strings.Contains(request.Url, "telnet") {
+				go PerformRequest(request, throttle)
+			} else {
+				go PerformTelnet(request, throttle)
+			}
 		}
 	}
 
