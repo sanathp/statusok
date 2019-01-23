@@ -418,6 +418,10 @@ github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910/go.mod h1:
 github.com/prometheus/common v0.0.0-20180801064454-c7de2306084e/go.mod h1:daVV7qP5qjZbuso7PdcryaAu0sAZbrN9i7WWcTMWvro=
 github.com/prometheus/common v0.0.0-20181020173914-7e9e6cabbd39/go.mod h1:daVV7qP5qjZbuso7PdcryaAu0sAZbrN9i7WWcTMWvro=
 github.com/prometheus/procfs v0.0.0-20181005140218-185b4288413d/go.mod h1:c3At6R/oaqEKCNdg8wHV1ftS6bRYblBhIjjI8uT2IGk=
+github.com/reiver/go-oi v0.0.0-20160325061615-431c83978379 h1:NBPkf14RzPYmr3478XQcmQyMKkxSvguL7+cyKKNvGxY=
+github.com/reiver/go-oi v0.0.0-20160325061615-431c83978379/go.mod h1:RrDBct90BAhoDTxB1fenZwfykqeGvhI6LsNfStJoEkI=
+github.com/reiver/go-telnet v0.0.0-20180421082511-9ff0b2ab096e h1:quuzZLi72kkJjl+f5AQ93FMcadG19WkS7MO6TXFOSas=
+github.com/reiver/go-telnet v0.0.0-20180421082511-9ff0b2ab096e/go.mod h1:+5vNVvEWwEIx86DB9Ke/+a5wBI464eDRo3eF0LcfpWg=
 github.com/rogpeppe/go-internal v1.0.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.1.0 h1:g0fH8RicVgNl+zVZDCDfbdWxAWoAEJyI7I3TZYXFiig=
 github.com/rogpeppe/go-internal v1.1.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=

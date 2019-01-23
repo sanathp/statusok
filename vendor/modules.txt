@@ -13,6 +13,10 @@ github.com/konsorten/go-windows-terminal-sequences
 github.com/mailgun/mailgun-go
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
+# github.com/reiver/go-oi v0.0.0-20160325061615-431c83978379
+github.com/reiver/go-oi
+# github.com/reiver/go-telnet v0.0.0-20180421082511-9ff0b2ab096e
+github.com/reiver/go-telnet
 # github.com/sirupsen/logrus v1.3.0
 github.com/sirupsen/logrus
 # golang.org/x/crypto v0.0.0-20190103213133-ff983b9c42bc
