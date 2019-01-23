@@ -1,0 +1,22 @@
+# github.com/codegangsta/cli v1.20.0
+github.com/codegangsta/cli
+# github.com/influxdata/influxdb v1.7.3
+github.com/influxdata/influxdb/client/v2
+github.com/influxdata/influxdb/models
+github.com/influxdata/influxdb/pkg/escape
+# github.com/influxdata/platform v0.0.0-20190117200541-d500d3cf5589
+github.com/influxdata/platform/models
+github.com/influxdata/platform/pkg/escape
+# github.com/konsorten/go-windows-terminal-sequences v1.0.1
+github.com/konsorten/go-windows-terminal-sequences
+# github.com/mailgun/mailgun-go v0.0.0-20171127222028-17e8bd11e87c
+github.com/mailgun/mailgun-go
+# github.com/pkg/errors v0.8.1
+github.com/pkg/errors
+# github.com/sirupsen/logrus v1.3.0
+github.com/sirupsen/logrus
+# golang.org/x/crypto v0.0.0-20190103213133-ff983b9c42bc
+golang.org/x/crypto/ssh/terminal
+# golang.org/x/sys v0.0.0-20190102155601-82a175fd1598
+golang.org/x/sys/unix
+golang.org/x/sys/windows
