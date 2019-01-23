@@ -62,8 +62,10 @@ func (requestConfig *RequestConfig) Validate() error {
 		return errors.New("Invalid Url")
 	}
 
-	if len(requestConfig.RequestType) == 0 {
-		return errors.New("RequestType cannot be empty")
+	if !strings.Contains(requestConfig.Url, "telnet") {
+		if len(requestConfig.RequestType) == 0 {
+			return errors.New("RequestType cannot be empty")
+		}
 	}
 
 	if requestConfig.ResponseTime == 0 {
@@ -107,17 +109,31 @@ func RequestsInit(data []RequestConfig, concurrency int) {
 		println("Request #", i, " : ", requestConfig.RequestType, " ", requestConfig.Url)
 
 		//Perform request
-		reqErr := PerformRequest(requestConfig, nil)
 
-		if reqErr != nil {
-			//Request Failed
-			println("\nFailed !!!! Not able to perfome below request")
-			println("\n----Request Deatails---")
-			println("Url :", requestConfig.Url)
-			println("Type :", requestConfig.RequestType)
-			println("Error Reason :", reqErr.Error())
-			println("\nPlease check the config file and try again")
-			os.Exit(3)
+		if !strings.Contains(requestConfig.Url, "telnet") {
+			reqErr := PerformRequest(requestConfig, nil)
+
+			if reqErr != nil {
+				//Request Failed
+				println("\nFailed !!!! Not able to perfome below request")
+				println("\n----Request Deatails---")
+				println("Url :", requestConfig.Url)
+				println("Type :", requestConfig.RequestType)
+				println("Error Reason :", reqErr.Error())
+				println("\nPlease check the config file and try again")
+				os.Exit(3)
+			}
+		} else {
+			//telnet
+			err := PerformTelnet(requestConfig, nil)
+			if err != nil {
+				println("\nFailed !!!! Not able to perfome below request")
+				println("\n----Request Deatails---")
+				println("Url :", requestConfig.Url)
+				println("Error Reason :", err.Error())
+				println("\nPlease check the config file and try again")
+				os.Exit(3)
+			}
 		}
 	}
 
@@ -164,6 +180,48 @@ func listenToRequestChannel() {
 		}
 	}
 
+}
+
+func PerformTelnet(requestConfig RequestConfig, throttle chan int) error {
+	//Remove value from throttel channel when request is completed
+	defer func() {
+		if throttle != nil {
+			<-throttle
+		}
+	}()
+
+	// telnet://10.10.1.20:34560
+	addr := strings.Split(requestConfig.Url, `://`)
+	start := time.Now()
+	err := DoTelnet(addr[1])
+	if err != nil {
+		//Not able to create Request object.Add Error to Database
+		go database.AddErrorInfo(database.ErrorInfo{
+			Id:           requestConfig.Id,
+			Url:          requestConfig.Url,
+			RequestType:  "telnet",
+			ResponseCode: 0,
+			ResponseBody: "",
+			Reason:       database.ErrCreateRequest,
+			OtherInfo:    err.Error(),
+		})
+
+		return err
+	}
+
+	elapsed := time.Since(start)
+
+	//Request succesfull . Add infomartion to Database
+	go database.AddRequestInfo(database.RequestInfo{
+		Id:                   requestConfig.Id,
+		Url:                  requestConfig.Url,
+		RequestType:          "telnet",
+		ResponseCode:         0,
+		ResponseTime:         elapsed.Nanoseconds() / 1000000,
+		ExpectedResponseTime: requestConfig.ResponseTime,
+	})
+
+	return nil
 }
 
 //takes the date from requestConfig and creates http request and executes it
