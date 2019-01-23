@@ -283,6 +283,21 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 
 	defer getResponse.Body.Close()
 
+	if getResponse.StatusCode == http.StatusMovedPermanently {
+		url, _ := getResponse.Location()
+		req, err := http.NewRequest("GET", url.String(), nil)
+		if err != nil {
+			return err
+		}
+
+		getResponse, err = client.Do(req)
+		if err != nil {
+			return err
+		}
+		defer getResponse.Body.Close()
+
+	}
+
 	if getResponse.StatusCode != requestConfig.ResponseCode {
 		//Response code is not the expected one .Add Error to database
 		go database.AddErrorInfo(database.ErrorInfo{
