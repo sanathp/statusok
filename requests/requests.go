@@ -2,6 +2,7 @@ package requests
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bigwhite/statusok/database"
@@ -257,6 +259,12 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 	*/
 
 	client := &http.Client{}
+	if strings.Contains(requestConfig.Url, "https") {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client.Transport = tr
+	}
 	start := time.Now()
 
 	getResponse, respErr := client.Do(request)
