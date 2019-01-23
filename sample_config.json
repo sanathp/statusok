@@ -97,6 +97,15 @@
 			"checkEvery":30,
 			"responseCode":200,
 			"responseTime":800
+		},
+		{
+			"url":"telnet://localhost:8000",
+			"formParams":{
+				"description":"tcp port monitor probe",
+				"url":"telnet://localhost:8000"
+			},
+			"checkEvery":30,
+			"responseTime":800
 		}
 	]
 }
