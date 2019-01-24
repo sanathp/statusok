@@ -96,7 +96,7 @@ func startMonitoring(configFileName string, logFileName string) {
 	//setup different notification clients
 	notify.AddNew(config.Notifications)
 	//Send test notifications to all the notification clients
-	notify.SendTestNotification()
+	//notify.SendTestNotification()
 
 	//Create unique ids for each request date given in config file
 	reqs, ids := validateAndCreateIdsForRequests(config.Requests)
