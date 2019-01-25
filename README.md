@@ -16,6 +16,8 @@ I add some new features and fix some obvious bugs for statusok:
 * Remove dingding for its failed when init
 * Remove SendTestNotification
 
+* support build based on vendor
+
 ## Simple Version
 
 Simple Setup to monitor your website and recieve a notification to your Gmail when your website is down.
