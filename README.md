@@ -2,6 +2,19 @@
 
 Monitor your Website and APIs from your computer.Get notified through Slack or E-mail when your server is down or response time is more than expected.
 
+## About this fork repo
+
+This repo is forked from sanathp/statusok which is in inactive state.
+
+I add some new features and fix some obvious bugs for statusok:
+
+* Support go module
+* Add Makefile for convenient build
+* Add https request support (ignore server certification validation)
+* Add telnet request support
+
+* Remove dingding for its failed when init
+* Remove SendTestNotification
 
 ## Simple Version
 
@@ -26,7 +39,18 @@ Step 1: Write a config.json with the url information
 			"requestType":"GET",
 			"checkEvery":30,	
 			"responseTime":800
-		}
+		},
+		{
+                        "url":"https://yourwebsite.com",
+                        "requestType":"GET",
+                        "checkEvery":30,
+                        "responseCode":200,
+                        "responseTime":800
+                },
+		{
+                        "url":"telnet://localhost:8000",
+                        "checkEvery":30,
+                }		
 	]
 }
 ```
