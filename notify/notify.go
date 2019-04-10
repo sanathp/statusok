@@ -141,6 +141,7 @@ func isEmptyObject(objectString string) bool {
 	objectString = strings.Replace(objectString, "map", "", -1)
 	objectString = strings.Replace(objectString, "[]", "", -1)
 	objectString = strings.Replace(objectString, " ", "", -1)
+	objectString = strings.Replace(objectString, "{}", "", -1)
 
 	if len(objectString) > 2 {
 		return false
