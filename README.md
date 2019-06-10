@@ -130,6 +130,46 @@ Notifications will be triggered when mean response time is below given response 
 
 Adding support to other clients is simple.[view details](https://github.com/sanathp/statusok/blob/master/Config.md#write-your-own-notification-client)
 
+## Running with plain Docker
+
+```
+docker run -d -v /path/to/config/folder:/config sanathp/statusok
+```
+
+*Note*: Config folder should contain config file with name `config.json`
+
+## Running with Docker Compose
+
+Prepare docker-compose.yml config like this:
+
+```
+version: '2'
+services:
+  statusok:
+    build: sanathp/statusok
+    volumes:
+      - /path/to/config/folder:/config
+    depends_on:
+      - influxdb
+  influxdb:
+    image: tutum/influxdb:0.9
+    environment:
+      - PRE_CREATE_DB="statusok" 
+    ports:
+      - 8083:8083 
+      - 8086:8086
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+```
+
+Now run it:
+
+```
+docker-compose up
+```
+
 ## Contribution
 
 Contributions are welcomed and greatly appreciated. Create an issue if you find bugs.
