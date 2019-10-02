@@ -127,6 +127,7 @@ Notifications will be triggered when mean response time is below given response 
 3. [Mailgun](https://github.com/sanathp/statusok/blob/master/Config.md#mailgun)
 4. [Http EndPoint](https://github.com/sanathp/statusok/blob/master/Config.md#http-endpoint)
 5. [Dingding](https://github.com/sanathp/statusok/blob/master/Config.md#dingding)
+6. [Telegram](https://github.com/sanathp/statusok/blob/master/Config.md#telegram)
 
 Adding support to other clients is simple.[view details](https://github.com/sanathp/statusok/blob/master/Config.md#write-your-own-notification-client)
 
