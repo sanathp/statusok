@@ -1,6 +1,6 @@
 # StatusOK
 
-Monitor your Website and APIs from your computer.Get notified through Slack or E-mail when your server is down or response time is more than expected.
+Monitor your Website and APIs from your computer. Get notified through Slack or E-mail when your server is down or response time is more than expected.
 
 
 ## Simple Version
