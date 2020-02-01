@@ -3,8 +3,9 @@ package notify
 import (
 	"errors"
 	"fmt"
-	"github.com/mailgun/mailgun-go"
 	"strings"
+
+	mailgun "gopkg.in/mailgun/mailgun-go.v1"
 )
 
 var mailGunClient mailgun.Mailgun
