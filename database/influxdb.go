@@ -83,6 +83,7 @@ func (influxDb InfluxDb) AddRequestInfo(requestInfo RequestInfo) error {
 	tags := map[string]string{
 		"requestId":   strconv.Itoa(requestInfo.Id),
 		"requestType": requestInfo.RequestType,
+		"url": requestInfo.Url,
 	}
 	fields := map[string]interface{}{
 		"responseTime": requestInfo.ResponseTime,
@@ -99,7 +100,7 @@ func (influxDb InfluxDb) AddRequestInfo(requestInfo RequestInfo) error {
 	}
 
 	point, err := client.NewPoint(
-		requestInfo.Url,
+		"statusok.request",
 		tags,
 		fields,
 		time.Now(),
