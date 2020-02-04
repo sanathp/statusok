@@ -93,7 +93,7 @@ func RequestsInit(data []RequestConfig, concurrency int) {
 	requestChannel = make(chan RequestConfig, len(data))
 
 	if len(data) == 0 {
-		println("\nNo requests to monitor.Please add requests to you config file")
+		println("\nNo requests to monitor. Please add requests to you config file")
 		os.Exit(3)
 	}
 	//send requests to make sure every every request is valid
@@ -108,8 +108,8 @@ func RequestsInit(data []RequestConfig, concurrency int) {
 
 		if reqErr != nil {
 			//Request Failed
-			println("\nFailed !!!! Not able to perfome below request")
-			println("\n----Request Deatails---")
+			println("\nFailed !!!! Not able to perfom below request")
+			println("\n----Request Details---")
 			println("Url :", requestConfig.Url)
 			println("Type :", requestConfig.RequestType)
 			println("Error Reason :", reqErr.Error())
