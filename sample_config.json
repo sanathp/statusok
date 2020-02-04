@@ -29,6 +29,10 @@
 		"username":"statusok",
 		"channelWebhookURL":"https://hooks.slack.com/services/T09ZQZhET2E5Tl7"
 	},
+	"telegram":{
+		"botToken":"xxxxxx:xxxx-xxxxxxxxxxxxxxxx",
+		"chatID":"-1001027884121"
+	},
 	"mailGun":{
 		"email":"statusok@gmail.com",
 		"apiKey":"key-a8215497fc0",

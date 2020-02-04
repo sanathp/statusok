@@ -187,6 +187,17 @@ To recieve notifications to any Dingding add below block to your config file wit
         }
 }
 ```
+### Telegram
+
+To recieve notifications to your Telegram Channel/Chat, add below block to your config file with your telegram details
+
+```
+"telegram":{
+	"botToken":"bot token",
+	"chatID":"chat id"
+}
+
+```
 [Dingding Dev Document](https://open-doc.dingtalk.com/docs/doc.htm?spm=a219a.7629140.0.0.Tvbh61&treeId=257&articleId=105735&docType=1)
 
 ### Write Your own Notification Client
