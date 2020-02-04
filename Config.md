@@ -24,7 +24,7 @@ Config file should be in JSON format (Support for other formats will be added in
 	}
 },
 "requests":[
-		//an array of request objects	
+		//an array of request objects
 		{
 			"url":"https://google.com",
 			"requestType":"GET",
@@ -94,14 +94,14 @@ You can monitor all types of REST APIs or websites as below.
 
 ```
 
-### Request  parameters 
+### Request  parameters
 
 Description for each request parameter.
 
 | Parameter      | Description   
-| ------------- |------------- 
-| url     | Http Url 
-| requestType     | Http Request Type in all capital letters  e.g. GET,PUT,POST,DELETE 
+| ------------- |-------------
+| url     | Http Url
+| requestType     | Http Request Type in all capital letters  e.g. GET,PUT,POST,DELETE
 | headers     | A list of key value pairs which will be added to header of a request
 | formParams     | A list of key value pairs which will be added to body of the request.By deafult content type is "application/x-www-form-urlencoded".For application/json content type add "Content-Type":"application/json" to headers
 | urlParams     | A list of key value pairs which will be appended to url e.g: http://google.com?name=statusok
@@ -110,7 +110,7 @@ Description for each request parameter.
 |responseTime|Expected response time in milliseconds,when mean response time is below this value a notification is triggered
 
 
-## Notifications 
+## Notifications
 
 Notifications will be triggered when mean response time is below given response time for a request or when an error is occured.Currently the below clients are supported to receive notifications.
 
@@ -158,8 +158,7 @@ To recieve notifications to your email Using Mailgun add below block to your con
 "mailGun":{
 	"email":"your email id",
 	"apiKey":"your api key",
-	"domain":"domain name",
-	"publicApiKey":"your publick api key"
+	"domain":"domain name"
 }
 ```
 ### Http EndPoint
@@ -174,7 +173,7 @@ To recieve notifications to any http Endpoint add below block to your config fil
 		"Content-Type":"application/json"
 	}
 }
-```	
+```
 ### Dingding
 To recieve notifications to any Dingding add below block to your config file with request details.
 
@@ -202,7 +201,7 @@ SendErrorNotification(notification ErrorNotification) error
 If you have written a new notification client which is useful to others, feel free to create a pull request.
 
 ## Database
- 
+
 Save Requests response time information and error information to your database by adding database details to config file. Currently only Influxdb 0.9.3+ is supported.[Add support to your database](https://github.com/sanathp/statusok/blob/master/Config.md#save-data-to-any-other-database)
 
 ### Influx Db 0.9.3+
