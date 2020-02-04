@@ -113,7 +113,10 @@ func startMonitoring(configFileName string, logFileName string) {
 	//Just to check StatusOk is running or not
 	http.HandleFunc("/", statusHandler)
 
-	if config.Port == 0 {
+	port, portSet := os.LookupEnv("PORT")
+	if portSet == true {
+		http.ListenAndServe(":"+port, nil)
+	} else if config.Port == 0 {
 		//Default port
 		http.ListenAndServe(":7321", nil)
 	} else {
