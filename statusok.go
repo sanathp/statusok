@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/codegangsta/cli"
-	"github.com/sanathp/statusok/database"
-	"github.com/sanathp/statusok/notify"
-	"github.com/sanathp/statusok/requests"
+	"github.com/urfave/cli"
+	"statusok/database"
+	"statusok/notify"
+	"statusok/requests"
 	"io"
 	"math/rand"
 	"net/http"
@@ -37,19 +37,19 @@ func main() {
 	app.Usage = "Monitor your website.Get notifications when its down"
 
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "config",
 			Value: "config.json",
 			Usage: "location of config file",
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "log",
 			Value: "",
 			Usage: "file to save logs",
 		},
 	}
 
-	app.Action = func(c *cli.Context) {
+	app.Action = func(c *cli.Context) error {
 
 		if fileExists(c.String("config")) {
 
@@ -69,7 +69,7 @@ func main() {
 		} else {
 			println("Config file not present at the given location: ", c.String("config"), "\nPlease give correct file location using --config parameter")
 		}
-
+		return nil
 	}
 
 	//Run as cli app
