@@ -5,13 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sanathp/statusok/database"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/sanathp/statusok/database"
 )
 
 var (
@@ -29,18 +31,27 @@ const (
 	DefaultTime         = "300s"
 	DefaultResponseCode = http.StatusOK
 	DefaultConcurrency  = 1
+
+	CheckContains    = "contains"
+	CheckNotContains = "notContains"
 )
 
 type RequestConfig struct {
-	Id           int
-	Url          string            `json:"url"`
-	RequestType  string            `json:"requestType"`
-	Headers      map[string]string `json:"headers"`
-	FormParams   map[string]string `json:"formParams"`
-	UrlParams    map[string]string `json:"urlParams"`
-	ResponseCode int               `json:"responseCode"`
-	ResponseTime int64             `json:"responseTime"`
-	CheckEvery   time.Duration     `json:"checkEvery"`
+	Id                int
+	Url               string                  `json:"url"`
+	RequestType       string                  `json:"requestType"`
+	Headers           map[string]string       `json:"headers"`
+	FormParams        map[string]string       `json:"formParams"`
+	UrlParams         map[string]string       `json:"urlParams"`
+	ResponseCode      int                     `json:"responseCode"`
+	ResponseTime      int64                   `json:"responseTime"`
+	CheckEvery        time.Duration           `json:"checkEvery"`
+	CheckResponseBody CheckResponseBodyOption `json:"checkResponseBody"`
+}
+
+type CheckResponseBodyOption struct {
+	CheckType string `json:"checkType"`
+	MatchFor  string `json:"matchFor"`
 }
 
 //Set Id for request
@@ -74,6 +85,17 @@ func (requestConfig *RequestConfig) Validate() error {
 	if requestConfig.CheckEvery == 0 {
 		defTime, _ := time.ParseDuration(DefaultTime)
 		requestConfig.CheckEvery = defTime
+	}
+
+	if (CheckResponseBodyOption{}) != requestConfig.CheckResponseBody {
+		chkBodyOption := requestConfig.CheckResponseBody
+		if chkBodyOption.CheckType == CheckContains || chkBodyOption.CheckType == CheckNotContains {
+			if chkBodyOption.MatchFor == "" {
+				return errors.New("matchFor cannot be empty")
+			}
+		} else {
+			return errors.New("checkType must be " + CheckContains + " or " + CheckNotContains)
+		}
 	}
 
 	return nil
@@ -297,6 +319,38 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 	}
 
 	elapsed := time.Since(start)
+
+	if (CheckResponseBodyOption{}) != requestConfig.CheckResponseBody {
+		isErrResp := false
+		responseBody := convertResponseToString(getResponse)
+		errReason := "ResponseBody "
+		switch requestConfig.CheckResponseBody.CheckType {
+		case CheckContains:
+			if !strings.Contains(responseBody, requestConfig.CheckResponseBody.MatchFor) {
+				isErrResp = true
+				errReason += "Not contains \"" + requestConfig.CheckResponseBody.MatchFor + "\""
+			}
+		case CheckNotContains:
+			if strings.Contains(responseBody, requestConfig.CheckResponseBody.MatchFor) {
+				isErrResp = true
+				errReason += "contains \"" + requestConfig.CheckResponseBody.MatchFor + "\""
+			}
+		}
+
+		if isErrResp {
+			err := errors.New(errReason)
+			go database.AddErrorInfo(database.ErrorInfo{
+				Id:           requestConfig.Id,
+				Url:          requestConfig.Url,
+				RequestType:  requestConfig.RequestType,
+				ResponseCode: getResponse.StatusCode,
+				ResponseBody: responseBody,
+				Reason:       err,
+				OtherInfo:    "",
+			})
+			return err
+		}
+	}
 
 	//Request succesfull . Add infomartion to Database
 	go database.AddRequestInfo(database.RequestInfo{
