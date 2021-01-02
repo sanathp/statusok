@@ -1,0 +1,28 @@
+{
+"database":{
+	"influxDb":{
+		"host":"localhost",
+		"port":8086,
+		"databaseName":"statusok",
+		"username":"",
+		"password":""
+	}
+},
+"requests":[
+		{
+			"url":"http://localhost:5500",
+			"requestType":"GET",
+			"headers":{
+			},
+			"params":{
+			},
+			"checkEvery":5,
+			"responseCode":200,
+			"responseTime":800,
+			"checkResponseBody" : {
+				"checkType" : "contains",
+				"matchFor" : "수업소개"
+ 			}
+		}
+	]
+}
