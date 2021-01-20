@@ -246,16 +246,10 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 	//Add headers to the request
 	AddHeaders(request, requestConfig.Headers)
 
-	//TODO: put timeout ?
-	/*
-		timeout := 10 * requestConfig.ResponseTime
-
-		client := &http.Client{
-			Timeout: timeout,
-		}
-	*/
-
-	client := &http.Client{}
+	timeout := time.Duration(requestConfig.ResponseTime) * time.Millisecond
+	client := &http.Client{
+		Timeout: timeout,
+	}
 	start := time.Now()
 
 	getResponse, respErr := client.Do(request)
