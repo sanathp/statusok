@@ -3,16 +3,19 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/codegangsta/cli"
-	"github.com/sanathp/statusok/database"
-	"github.com/sanathp/statusok/notify"
-	"github.com/sanathp/statusok/requests"
+
+	//"github.com/codegangsta/cli"
 	"io"
 	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/sanathp/statusok/database"
+	"github.com/sanathp/statusok/notify"
+	"github.com/sanathp/statusok/requests"
+	"github.com/urfave/cli"
 )
 
 type configParser struct {
