@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sanathp/statusok/database"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/sanathp/statusok/database"
 )
 
 var (
@@ -33,14 +34,15 @@ const (
 
 type RequestConfig struct {
 	Id           int
-	Url          string            `json:"url"`
-	RequestType  string            `json:"requestType"`
-	Headers      map[string]string `json:"headers"`
-	FormParams   map[string]string `json:"formParams"`
-	UrlParams    map[string]string `json:"urlParams"`
-	ResponseCode int               `json:"responseCode"`
-	ResponseTime int64             `json:"responseTime"`
-	CheckEvery   time.Duration     `json:"checkEvery"`
+	Url          string                 `json:"url"`
+	RequestType  string                 `json:"requestType"`
+	Headers      map[string]string      `json:"headers"`
+	FormParams   map[string]string      `json:"formParams"`
+	BodyJson     map[string]interface{} `json:"bodyJson"`
+	UrlParams    map[string]string      `json:"urlParams"`
+	ResponseCode int                    `json:"responseCode"`
+	ResponseTime int64                  `json:"responseTime"`
+	CheckEvery   time.Duration          `json:"checkEvery"`
 }
 
 //Set Id for request
@@ -175,7 +177,7 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 	var request *http.Request
 	var reqErr error
 
-	if len(requestConfig.FormParams) == 0 {
+	if len(requestConfig.FormParams) == 0 && len(requestConfig.BodyJson) == 0 {
 		//formParams create a request
 		request, reqErr = http.NewRequest(requestConfig.RequestType,
 			requestConfig.Url,
@@ -183,9 +185,17 @@ func PerformRequest(requestConfig RequestConfig, throttle chan int) error {
 
 	} else {
 		if requestConfig.Headers[ContentType] == JsonContentType {
-			//create a request using using formParams
+			var jsonBody io.Reader
+			var jsonErr error
 
-			jsonBody, jsonErr := GetJsonParamsBody(requestConfig.FormParams)
+			if len(requestConfig.FormParams) > 0 {
+				//create a request using formParams
+				jsonBody, jsonErr = GetJsonParamsBody(requestConfig.FormParams)
+			} else {
+				//create a request using BodyJson
+				jsonBody, jsonErr = GetJsonBody(requestConfig.BodyJson)
+			}
+
 			if jsonErr != nil {
 				//Not able to create Request object.Add Error to Database
 				go database.AddErrorInfo(database.ErrorInfo{
@@ -346,6 +356,20 @@ func GetUrlValues(params map[string]string) url.Values {
 	}
 
 	return urlParams
+}
+
+//Creates body for request of type application/json from map
+func GetJsonBody(params map[string]interface{}) (io.Reader, error) {
+	data, jsonErr := json.Marshal(params)
+
+	if jsonErr != nil {
+
+		jsonErr = errors.New("Invalid Parameters for Content-Type application/json : " + jsonErr.Error())
+
+		return nil, jsonErr
+	}
+
+	return bytes.NewBuffer(data), nil
 }
 
 //Creates body for request of type application/json from map
