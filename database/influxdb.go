@@ -66,10 +66,9 @@ func (influxDb InfluxDb) Initialize() error {
 
 	if createDbErr != nil {
 		if createDbErr.Error() != "database already exists" {
-			println("InfluxDB : Failed to create Database")
+			println("InfluxDB : Failed to create Database: " + createDbErr.Error())
 			return createDbErr
 		}
-
 	}
 
 	println("InfluxDB: Successfuly connected . Version:", ver)
